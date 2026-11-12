@@ -146,8 +146,9 @@ if [ "$DO_STRUCT" -eq 1 ]; then
             else
                 w "no /etc/dct-os-release in the squashfs"
             fi
-            if unsquashfs -ll "$TMP/base.squashfs" 2>/dev/null \
-                    | grep -Fq 'etc/systemd/user/ubuntu-desktop-installer.service -> /dev/null'; then
+            if unsquashfs -ll "$TMP/base.squashfs" >"$TMP/base.list" 2>/dev/null \
+                    && grep -Fq 'etc/systemd/user/ubuntu-desktop-installer.service -> /dev/null' \
+                        "$TMP/base.list"; then
                 p "Ubuntu installer does not auto-open over the DCT live desktop"
             else
                 f "Ubuntu installer auto-start mask missing from the live system"

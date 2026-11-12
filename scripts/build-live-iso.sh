@@ -818,7 +818,7 @@ else
 fi
 
 got_volid="$(xorriso -indev "$OUTISO" -pvd_info 2>/dev/null \
-             | sed -n 's/^Volume id *: *//p' | head -1)"
+             | sed -n 's/^Volume [Ii]d *: *//p' | head -1)"
 [ "$got_volid" = "$VOLID" ] && ok "volume id: $got_volid" \
     || warn "volume id is '$got_volid', expected '$VOLID'"
 
@@ -894,7 +894,7 @@ cat <<EOF
     sync
 
   Boot the target PC from it and pick "Try DCT OS".
-  Nothing is written to that PC's disk unless Install is clicked.
+  This is a try-only demo image. It does not install or modify the target disk.
 
   Prove which image booted, on the live desktop:
 
