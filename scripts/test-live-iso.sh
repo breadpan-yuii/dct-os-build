@@ -19,7 +19,8 @@
 # additionally exercises the El Torito/UEFI boot path that a stick uses.
 #
 # Requires: qemu-system-x86_64, edk2-ovmf, xorriso, squashfs-tools,
-#           imagemagick (screenshots only).
+#           imagemagick (screenshots only). Uses KVM when /dev/kvm is
+#           accessible, otherwise falls back to slow TCG emulation.
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
@@ -56,6 +57,19 @@ fi
 [ -n "$ISO" ] && [ -f "$ISO" ] || { echo "no ISO found (build one, or pass a path)" >&2; exit 2; }
 ISO="$(cd "$(dirname "$ISO")" && pwd)/$(basename "$ISO")"
 
+# Hardware acceleration. Without KVM a full GNOME live session under TCG can
+# take 20+ minutes and may never settle, so prefer KVM whenever it is usable.
+QEMU_ACCEL=()
+if [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
+    QEMU_ACCEL=(-enable-kvm -cpu host)
+    ACCEL_NOTE="KVM"
+    BOOT_SCALE=1
+else
+    ACCEL_NOTE="TCG (software, slow)"
+    SERIAL_TIMEOUT=900
+    BOOT_SCALE=4
+fi
+
 PASS=0; FAIL=0; WARN=0
 p() { printf '\033[1;32m PASS\033[0m %s\n' "$*"; PASS=$((PASS + 1)); }
 f() { printf '\033[1;31m FAIL\033[0m %s\n' "$*"; FAIL=$((FAIL + 1)); }
@@ -63,7 +77,7 @@ w() { printf '\033[1;33m WARN\033[0m %s\n' "$*"; WARN=$((WARN + 1)); }
 h() { printf '\n\033[1;34m==\033[0m %s\n' "$*"; }
 
 h "image"
-printf '  %s\n  %s\n' "$ISO" "$(du -h "$ISO" | cut -f1)"
+printf '  %s\n  %s\n  accel: %s\n' "$ISO" "$(du -h "$ISO" | cut -f1)" "$ACCEL_NOTE"
 
 # ---------------------------------------------------------------------------
 # 1. Structure
@@ -167,7 +181,7 @@ if [ "$DO_SERIAL" -eq 1 ]; then
             # No `ignore_uuid` here on purpose: this exercises casper's real
             # medium detection, including the /.disk UUID handshake.
             qemu-system-x86_64 \
-                -m 3072 -smp 2 \
+                -m 3072 -smp 2 "${QEMU_ACCEL[@]}" \
                 -cdrom "$ISO" \
                 -kernel "$TMP/vmlinuz" -initrd "$TMP/initrd" \
                 -append "console=ttyS0,115200 text nopersistent" \
@@ -254,7 +268,7 @@ if [ "$DO_FIRMWARE" -eq 1 ]; then
         SOCK="$TMP/monitor.sock"
 
         qemu-system-x86_64 \
-            -machine q35 -m 3072 -smp 2 \
+            -machine q35 -m 3072 -smp 2 "${QEMU_ACCEL[@]}" \
             -drive if=pflash,format=raw,readonly=on,file="$OVMF_CODE" \
             -drive if=pflash,format=raw,file="$TMP/VARS.fd" \
             -cdrom "$ISO" -boot d \
@@ -265,9 +279,9 @@ if [ "$DO_FIRMWARE" -eq 1 ]; then
 
         # GRUB waits `timeout=30`, so 45 s is the menu, 150 s is past the
         # splash and into the live session.
-        python3 - "$SOCK" "$TMP" <<'PY' &
+        python3 - "$SOCK" "$TMP" "$BOOT_SCALE" <<'PY' &
 import socket, sys, time
-sock, out = sys.argv[1], sys.argv[2]
+sock, out, scale = sys.argv[1], sys.argv[2], float(sys.argv[3])
 for _ in range(60):
     try:
         s = socket.socket(socket.AF_UNIX); s.connect(sock); break
@@ -278,16 +292,16 @@ else:
 s.settimeout(10)
 def cmd(c):
     s.sendall((c + "\n").encode()); time.sleep(0.5)
-time.sleep(20)
+time.sleep(20 * scale)
 cmd("screendump %s/grub.ppm" % out)
-time.sleep(110)
+time.sleep(110 * scale)
 cmd("screendump %s/desktop.ppm" % out)
 cmd("quit")
 PY
         mon=$!
 
         # Hard ceiling in case the monitor helper dies.
-        ( sleep 300; kill "$qpid" 2>/dev/null ) &
+        ( sleep $((300 * BOOT_SCALE)); kill "$qpid" 2>/dev/null ) &
         watchdog=$!
 
         wait "$mon" 2>/dev/null || true

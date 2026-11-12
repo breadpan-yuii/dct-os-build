@@ -153,7 +153,7 @@ See `docs/updates.md`.
 ### Prove it boots before you touch a USB stick
 
 ```bash
-./scripts/test-live-iso.sh              # structure + two QEMU boots, ~6 min
+./scripts/test-live-iso.sh              # structure + two QEMU boots, ~3 min with KVM
 ./scripts/test-live-iso.sh --structure  # 30 s, no QEMU
 ```
 
