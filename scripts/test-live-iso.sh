@@ -146,6 +146,12 @@ if [ "$DO_STRUCT" -eq 1 ]; then
             else
                 w "no /etc/dct-os-release in the squashfs"
             fi
+            if unsquashfs -ll "$TMP/base.squashfs" 2>/dev/null \
+                    | grep -Fq 'etc/systemd/user/ubuntu-desktop-installer.service -> /dev/null'; then
+                p "Ubuntu installer does not auto-open over the DCT live desktop"
+            else
+                f "Ubuntu installer auto-start mask missing from the live system"
+            fi
             rm -f "$TMP/base.squashfs"
         else
             f "could not extract the base layer"

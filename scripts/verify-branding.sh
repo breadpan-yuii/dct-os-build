@@ -85,6 +85,12 @@ done
 echo "== boot =="
 if [ "$LIVE" -eq 1 ]; then
     w "GRUB theme checks skipped (live remaster — the ISO supplies its own grub.cfg)"
+    installer_unit="$T/etc/systemd/user/ubuntu-desktop-installer.service"
+    if [ -L "$installer_unit" ] && [ "$(readlink "$installer_unit")" = /dev/null ]; then
+        p "Ubuntu installer auto-start masked (live session opens to DCT desktop)"
+    else
+        f "Ubuntu installer auto-start is still enabled in the live session"
+    fi
 else
     if exists /boot/grub/themes/dct/theme.txt; then
         p "GRUB theme present"

@@ -100,15 +100,6 @@ if [ ${#missing[@]} -gt 0 ]; then
 fi
 ok "tooling present"
 
-# Peak: base ISO + materialised tree + new squashfs. The extracted layer
-# files are deleted as soon as they are mounted (the mount holds the inode),
-# so they never overlap with the tree.
-free_kb=$(df -Pk "$REPO" | awk 'NR==2{print $4}')
-need_kb=$(( 22*1024*1024 ))
-printf '  free: %s GB   need: ~%s GB\n' \
-    "$((free_kb/1024/1024))" "$((need_kb/1024/1024))"
-[ "$free_kb" -ge "$need_kb" ] || die "not enough disk space under $REPO (need ~22 GB)"
-
 [ "$(id -u)" -eq 0 ] && ok "running as root — ownership and capabilities preserved" \
                      || warn "not root: capability xattrs will be lost"
 
@@ -121,6 +112,36 @@ case "$ROOTFS" in
     "$WORK"/*) ;;
     *) die "internal error: ROOTFS=$ROOTFS is not under $WORK" ;;
 esac
+
+# A prior run can leave the materialised tree and packed lower layer behind.
+# They are reproducible, and count against the peak-space requirement. Remove
+# only these known generated paths, and refuse if any mount remains underneath.
+if [ "$DRY" -eq 0 ]; then
+    for stale in "$ROOTFS" "$NEWSQ"; do
+        case "$stale" in
+            "$WORK"/*) ;;
+            *) die "refusing to clean path outside WORK: $stale" ;;
+        esac
+        if [ -e "$stale" ] || [ -L "$stale" ]; then
+            mounted="$(awk -v p="$stale" '$2 == p || index($2, p "/") == 1 {print $2}' /proc/mounts)"
+            [ -z "$mounted" ] || die "refusing to clean $stale; mount(s) remain: $mounted"
+            if [ -d "$stale" ] && [ ! -L "$stale" ]; then
+                rm -rf --one-file-system -- "$stale"
+            else
+                rm -f -- "$stale"
+            fi
+        fi
+    done
+fi
+
+# Peak: base ISO + materialised tree + new squashfs. The extracted layer
+# files are deleted as soon as they are mounted (the mount holds the inode),
+# so they never overlap with the tree.
+free_kb=$(df -Pk "$REPO" | awk 'NR==2{print $4}')
+need_kb=$(( 22*1024*1024 ))
+printf '  free: %s GB   need: ~%s GB\n' \
+    "$((free_kb/1024/1024))" "$((need_kb/1024/1024))"
+[ "$free_kb" -ge "$need_kb" ] || die "not enough disk space under $REPO (need ~22 GB)"
 
 total_mb=$(awk '/MemTotal/{printf "%d", $2/1024}' /proc/meminfo)
 printf '  ram: %s MB   cpus: %s   squashfs jobs: %s\n' "$total_mb" "$JOBS" "$JOBS"
@@ -381,6 +402,19 @@ say "applying DCT branding"
 "$REPO/scripts/apply-branding.sh" --root "$ROOTFS" --no-initramfs --no-grub \
     || die "apply-branding failed"
 
+# Ubuntu's live layer automatically opens ubuntu-desktop-bootstrap in the
+# graphical session ("Welcome to Ubuntu" / "Preparing Ubuntu..."). Its UI is
+# not rebrandable from this remaster. This is a try-only demo image: mask the
+# auto-start and hide its launcher rather than present an Ubuntu installer as
+# DCT OS. The separate installed-system installer work remains in the repo.
+mkdir -p "$ROOTFS/etc/systemd/user"
+ln -sfn /dev/null "$ROOTFS/etc/systemd/user/ubuntu-desktop-installer.service"
+installer_desktop="$ROOTFS/var/lib/snapd/desktop/applications/ubuntu-desktop-bootstrap_ubuntu-desktop-bootstrap.desktop"
+if [ -f "$installer_desktop" ]; then
+    sed -i '/^NoDisplay=/d; s/^Name=.*/Name=Install DCT OS/; $aNoDisplay=true' "$installer_desktop"
+fi
+ok "Ubuntu installer auto-launch masked; live session is try-only"
+
 mkdir -p "$ROOTFS/etc/plymouth"
 cat > "$ROOTFS/etc/plymouth/plymouthd.conf" <<'EOF'
 [Daemon]
@@ -576,6 +610,7 @@ for p in "${menus[@]}"; do
         if (/^\s*(menuentry|menu label|menu title|text|label)\b/) {
             s/Ubuntu 24\.04(\.\d+)? LTS/DCT OS 1.0/g;
             s/\bUbuntu\b/DCT OS/g;
+            s/Try or Install DCT OS/Try DCT OS/g;
         }
     ' "$p"
 
@@ -858,7 +893,7 @@ cat <<EOF
     sudo dd if=$OUTISO of=/dev/sdX bs=4M status=progress oflag=sync
     sync
 
-  Boot the target PC from it and pick "Try or Install DCT OS".
+  Boot the target PC from it and pick "Try DCT OS".
   Nothing is written to that PC's disk unless Install is clicked.
 
   Prove which image booted, on the live desktop:

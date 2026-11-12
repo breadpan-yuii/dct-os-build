@@ -182,7 +182,9 @@ disk. Ventoy also works and is safer if you are nervous.
    F12 or F10), pick the USB device.
 2. On a Secure Boot machine, choose the UEFI entry. It boots — the shim is
    Canonical's, unmodified.
-3. Pick **Try or Install DCT OS**. The live desktop appears. **Nothing has been
+3. Pick **Try DCT OS**. The DCT-branded live desktop appears. The Ubuntu
+   desktop-bootstrap installer is deliberately not auto-launched in this
+   try-only demo image. **Nothing has been
    written to that PC's disk.**
 
 Success criteria — all five, or it is not a demo:
