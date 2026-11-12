@@ -1,0 +1,16 @@
+// DCT OS — re-assert branding after any package transaction.
+//
+// Why this exists: several branded files sit at paths owned by packages
+// (base-files ships /etc/os-release, for example). The dpkg diversions
+// registered by apply-branding.sh protect those, but an update can still
+// replace a theme asset, regenerate a schema override, or install a package
+// that ships its own copy of one of our files. Rather than hope that never
+// happens, re-apply the cheap parts of the branding automatically.
+//
+// The hook is a no-op on systems where /usr/share/dct-os is absent, so this
+// file is harmless if the payload is ever removed.
+//
+// To watch it work:  sudo apt install --reinstall base-files
+//                    cat /etc/os-release | head -2
+
+DPkg::Post-Invoke { "/usr/sbin/dct-rebrand --quiet || true"; };

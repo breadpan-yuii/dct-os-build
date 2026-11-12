@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+
+# Only undo the diversion when the package is actually going away, not on
+# upgrade. $1 is the dpkg action.
+case "$1" in
+    remove|purge|abort-install|abort-upgrade|disappear)
+        if dpkg-divert --list /etc/os-release | grep -q 'dct-os-defaults'; then
+            dpkg-divert --package dct-os-defaults --divert /etc/os-release.dctorig \
+                        --rename --remove /etc/os-release
+        fi
+        ;;
+esac
+
+exit 0

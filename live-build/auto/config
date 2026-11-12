@@ -1,0 +1,33 @@
+#!/bin/sh
+# live-build configuration for DCT OS. Executed by `lb build` via auto/config.
+# Re-running this resets config/ — that is expected live-build behaviour.
+set -e
+
+# Point these at a Philippine mirror or your campus apt-cacher to cut build
+# time from ~40 min to ~10 min. Candidates: mirror.pregi.net, mirror.rise.ph,
+# or your own apt-cacher-ng instance.
+MIRROR="${DCT_MIRROR:-http://archive.ubuntu.com/ubuntu/}"
+
+lb config noauto \
+    --mode ubuntu \
+    --distribution noble \
+    --parent-distribution noble \
+    --archive-areas "main restricted universe multiverse" \
+    --parent-archive-areas "main restricted universe multiverse" \
+    --mirror-bootstrap "$MIRROR" \
+    --mirror-chroot    "$MIRROR" \
+    --mirror-binary    "$MIRROR" \
+    --binary-images iso-hybrid \
+    --linux-flavours generic \
+    --debian-installer false \
+    --memtest none \
+    --apt-indices false \
+    --bootappend-live "boot=live components quiet splash locale=en_PH.UTF-8 keyboard-layouts=us timezone=Asia/Manila" \
+    --iso-application "DCT OS" \
+    --iso-publisher "Dominican College of Tarlac; https://dct.edu.ph" \
+    --iso-volume "DCTOS_1_0" \
+    "$@"
+
+# Keep the 600 MB of extra LibreOffice locales out of the image. Zorin ships
+# 13 of them; a Tarlac classroom needs en and fil.
+lb config --apt-recommends false 2>/dev/null || true

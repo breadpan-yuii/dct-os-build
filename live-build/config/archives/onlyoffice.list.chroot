@@ -1,0 +1,12 @@
+# OnlyOffice Desktop Editors — third-party APT source.
+#
+# To enable:
+#   1. Fetch the signing key:
+#        curl -fsSL https://download.onlyoffice.com/GPG-KEY-ONLYOFFICE \
+#          > config/archives/onlyoffice.key.chroot
+#   2. Uncomment the deb line below.
+#   3. Uncomment onlyoffice-desktopeditors in config/package-lists/dct.list.chroot
+#
+# Left disabled by default so a fresh clone builds without network surprises.
+#
+# deb https://download.onlyoffice.com/repo/debian squeeze main

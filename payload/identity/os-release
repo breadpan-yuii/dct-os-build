@@ -1,0 +1,16 @@
+PRETTY_NAME="DCT OS 1.0"
+NAME="DCT OS"
+VERSION_ID="1.0"
+VERSION="1.0 (tarlac)"
+VERSION_CODENAME=tarlac
+ID=dctos
+ID_LIKE=ubuntu debian
+HOME_URL="https://dct.edu.ph"
+SUPPORT_URL="https://dct.edu.ph/helpdesk"
+BUG_REPORT_URL="https://dct.edu.ph/helpdesk"
+PRIVACY_POLICY_URL="https://dct.edu.ph/privacy"
+LOGO=dct-logo
+
+# IMPORTANT: keep these two. apt, software-properties and snapd read them.
+# Changing them breaks third-party repos and package pinning.
+UBUNTU_CODENAME=noble

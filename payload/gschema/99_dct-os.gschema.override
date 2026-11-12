@@ -1,0 +1,46 @@
+# DCT OS desktop defaults. Installed to /usr/share/glib-2.0/schemas/
+# Compiled by dct-os-defaults.postinst via glib-compile-schemas.
+# Verify a value landed: gsettings get org.gnome.desktop.background picture-uri
+
+[org.gnome.desktop.background]
+picture-uri='file:///usr/share/backgrounds/dct/dct-default.png'
+picture-uri-dark='file:///usr/share/backgrounds/dct/dct-default-dark.png'
+picture-options='zoom'
+primary-color='#0B2545'
+secondary-color='#071A33'
+color-shading-type='solid'
+
+[org.gnome.desktop.interface]
+font-name='Inter 11'
+document-font-name='Inter 11'
+monospace-font-name='JetBrains Mono 11'
+color-scheme='prefer-dark'
+cursor-theme='dct-cursors'
+icon-theme='Papirus-Dark'
+gtk-theme='dct-gtk'
+clock-format='12h'
+
+[org.gnome.desktop.screensaver]
+picture-uri='file:///usr/share/backgrounds/dct/dct-lock.png'
+primary-color='#071A33'
+
+[org.gnome.login-screen]
+logo='/usr/share/pixmaps/dct-logo.png'
+banner-message-enable=true
+banner-message-text='Dominican College of Tarlac — Authorized users only. Activity is logged.'
+
+[org.gnome.desktop.session]
+idle-delay=uint32 600
+
+[org.gnome.desktop.sound]
+theme-name='dct'
+
+# Student-facing dock / taskbar. Trim to what the labs actually use.
+[org.gnome.shell]
+favorite-apps=['firefox_firefox.desktop', 'onlyoffice-desktopeditors.desktop', 'org.gnome.Nautilus.desktop', 'dct-portal.desktop', 'org.gnome.TextEditor.desktop', 'org.gnome.Software.desktop']
+
+[org.gnome.desktop.privacy]
+remember-recent-files=false
+
+[org.gtk.Settings.FileChooser]
+sort-directories-first=true

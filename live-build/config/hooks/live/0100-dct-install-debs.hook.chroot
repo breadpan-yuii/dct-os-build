@@ -1,0 +1,18 @@
+#!/bin/sh
+# Runs INSIDE the live-build chroot, after package installation.
+# Installs the locally built DCT OS packages that build-iso.sh copied in.
+set -e
+
+DEBDIR=/var/tmp/dct-debs
+
+if [ -z "$(ls -A "$DEBDIR" 2>/dev/null)" ]; then
+    echo "DCT: no debs found in $DEBDIR — did 'make pkgs' run?" >&2
+    exit 1
+fi
+
+echo "DCT: installing local packages from $DEBDIR"
+dpkg -i "$DEBDIR"/*.deb || true
+apt-get -f install -y --no-install-recommends
+
+echo "DCT: installed:"
+dpkg-query -W -f='  ${Package} ${Version}\n' dct-os-desktop dct-os-defaults

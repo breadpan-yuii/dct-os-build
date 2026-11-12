@@ -1,0 +1,103 @@
+---
+# DCT OS — post-deployment fleet configuration.
+#
+# The ISO makes every machine identical. This makes them *managed*.
+#
+#   ansible-playbook -i inventory.ini site.yml --limit lab1
+#
+# Run against the pilot lab before the wider rollout. Idempotent.
+
+- name: DCT OS classroom baseline
+  hosts: classroom
+  become: true
+  gather_facts: true
+
+  vars:
+    dct_timezone: Asia/Manila
+    dct_locale: en_PH.UTF-8
+    # One machine in the lab serves as the apt cache. Point it at the actual
+    # lab server; without this, 40 PCs update from the internet at once.
+    dct_apt_proxy: "http://10.0.0.10:3142"
+    dct_epoptes_server: "10.0.0.10"
+    dct_manage_apt_proxy: true
+
+  tasks:
+    - name: Set timezone
+      community.general.timezone:
+        name: "{{ dct_timezone }}"
+
+    - name: Locale is present
+      community.general.locale_gen:
+        name: "{{ dct_locale }}"
+        state: present
+
+    - name: DCT OS packages are installed
+      ansible.builtin.apt:
+        name:
+          - dct-os-defaults
+          - dct-os-desktop
+          - epoptes-client
+          - timeshift
+        state: present
+        update_cache: true
+      register: dct_pkgs
+
+    - name: Re-apply branding if the package changed it
+      ansible.builtin.command: /usr/share/dct-os/apply-branding.sh
+      when: dct_pkgs.changed
+      changed_when: true
+
+    - name: Point apt at the campus cache
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/01dct-proxy
+        mode: "0644"
+        content: |
+          Acquire::http::Proxy "{{ dct_apt_proxy }}";
+          Acquire::https::Proxy "{{ dct_apt_proxy }}";
+      when: dct_manage_apt_proxy
+
+    - name: Unattended security updates from the local mirror
+      ansible.builtin.copy:
+        dest: /etc/apt/apt.conf.d/51dct-unattended
+        mode: "0644"
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Unattended-Upgrade "1";
+          APT::Periodic::AutocleanInterval "7";
+          Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+          Unattended-Upgrade::Remove-Unused-Dependencies "true";
+
+    - name: Weekly snapshot before updates so a bad update is one rollback away
+      ansible.builtin.cron:
+        name: "dct-timeshift-weekly"
+        weekday: "SUN"
+        hour: "3"
+        minute: "0"
+        user: root
+        job: >-
+          /usr/bin/timeshift --create --comments "pre-weekly" --tags D
+          --scripted >/dev/null 2>&1
+
+    - name: Epoptes client points at the lab server
+      ansible.builtin.copy:
+        dest: /etc/default/epoptes-client
+        mode: "0644"
+        content: |
+          SERVER="{{ dct_epoptes_server }}"
+
+    - name: No guest session for students
+      ansible.builtin.copy:
+        dest: /etc/dconf/db/local.d/00-dct-noguest
+        mode: "0644"
+        content: |
+          [org/gnome/login-screen]
+          allow-guest=false
+      notify: recompile dconf
+
+    - name: Report state
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} — DCT OS {{ ansible_distribution_version }} baseline applied"
+
+  handlers:
+    - name: recompile dconf
+      ansible.builtin.command: dconf update

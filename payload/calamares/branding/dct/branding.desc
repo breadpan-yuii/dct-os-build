@@ -1,0 +1,42 @@
+---
+# Calamares branding for DCT OS.
+# Install to /etc/calamares/branding/dct/branding.desc
+# referenced from /etc/calamares/settings.conf via:  branding: dct
+#
+# Deliberately no `slideshow:` key — a broken show.qml makes the installer
+# crash on the branding page, which is the worst possible place to fail.
+# Add a slideshow later, once you have images worth showing.
+
+componentName: dct
+
+strings:
+    productName:         "DCT OS"
+    shortProductName:    "DCT OS"
+    version:             "1.0"
+    shortVersion:        "1.0"
+    versionedName:       "DCT OS 1.0 (tarlac)"
+    shortVersionedName:  "DCT OS 1.0"
+    bootloaderEntryName: "DCT OS"
+    productUrl:          "https://dct.edu.ph"
+    supportUrl:          "https://dct.edu.ph/helpdesk"
+    releaseNotesUrl:     "https://dct.edu.ph/helpdesk"
+    knownIssuesUrl:      "https://dct.edu.ph/helpdesk"
+
+images:
+    productLogo:    "logo.png"
+    productIcon:    "logo.png"
+    productWelcome: "welcome.png"
+
+style:
+    # Keep in sync with payload/branding/tokens.env
+    sidebarBackground:      "#0B2545"
+    sidebarText:            "#FFFFFF"
+    sidebarTextSelect:      "#F2C14E"
+    sidebarTextHighlight:   "#F2C14E"
+    sidebarBackgroundCurrent: "#071A33"
+
+    windowPlacement: center
+
+    # Uncomment once logo.png exists and you have checked the layout on a
+    # 1024x768 screen, which is what the lab monitors actually are.
+    # sidebarBackgroundCurrent: "#13315C"

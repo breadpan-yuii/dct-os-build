@@ -1,0 +1,33 @@
+# DCT OS plymouth splash. Colours must match tokens.env.
+# Tested shape; verify visually with: sudo plymouthd --debug ; sudo plymouth --show-splash
+
+Window.SetBackgroundTopColor(0.043, 0.102, 0.200);    # #0B2545
+Window.SetBackgroundBottomColor(0.027, 0.102, 0.200); # #071A33
+
+logo_image = Image("logo.png");
+logo_sprite = Sprite(logo_image);
+logo_sprite.SetX(Window.GetWidth()  / 2 - logo_image.GetWidth()  / 2);
+logo_sprite.SetY(Window.GetHeight() / 2 - logo_image.GetHeight() / 2 - 40);
+logo_sprite.SetZ(100);
+
+# Subtle progress bar under the logo
+bar_bg = Image("progress_bg.png");
+bar_fg = Image("progress_fg.png");
+
+if (bar_bg != NULL) {
+    bg_sprite = Sprite(bar_bg);
+    bg_sprite.SetX(Window.GetWidth() / 2 - bar_bg.GetWidth() / 2);
+    bg_sprite.SetY(Window.GetHeight() / 2 + 60);
+    bg_sprite.SetZ(100);
+
+    fg_sprite = Sprite(bar_fg);
+    fg_sprite.SetX(Window.GetWidth() / 2 - bar_bg.GetWidth() / 2);
+    fg_sprite.SetY(Window.GetHeight() / 2 + 60);
+    fg_sprite.SetZ(101);
+}
+
+fun refresh_callback() {
+    # Hook for animated spinner later; intentionally static for v1.
+}
+
+Plymouth.SetRefreshFunction(refresh_callback);

@@ -1,0 +1,18 @@
+# build output
+dist/
+.iso-work/
+.demo-build/
+live-build/binary/
+live-build/chroot/
+live-build/cache/
+live-build/.build/
+packages/*/stage/
+
+# secret / local
+*.local
+inventory.ini
+secureboot-report*.txt
+
+# editor
+*.swp
+.DS_Store

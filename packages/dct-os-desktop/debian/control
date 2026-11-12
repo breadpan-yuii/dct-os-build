@@ -1,0 +1,39 @@
+Source: dct-os-desktop
+Section: metapackages
+Priority: optional
+Maintainer: DCT IT Services <it@dct.edu.ph>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: dct-os-desktop
+Architecture: all
+Depends: dct-os-defaults (>= 1.0),
+         papirus-icon-theme,
+         fonts-inter,
+         fonts-jetbrains-mono,
+         libreoffice-writer,
+         libreoffice-calc,
+         libreoffice-impress,
+         libreoffice-gnome,
+         firefox,
+         nautilus,
+         evince,
+         timeshift,
+         epoptes-client
+Recommends: onlyoffice-desktopeditors,
+            winetricks,
+            calamares,
+            gnome-shell-extension-appindicator
+# NOTE: GNOME extension package names drift between Ubuntu releases. Verify with
+#   apt-cache search gnome-shell-extension
+# on 24.04 before promoting any of these from Recommends to Depends. A wrong
+# name in Depends makes the whole metapackage uninstallable.
+Suggests: winehq-stable
+Description: DCT OS desktop environment
+ Meta package that turns an Ubuntu 24.04 LTS base into the standard DCT OS
+ classroom desktop: the college's application set, icon/theme baseline and
+ classroom management tooling, in one installable unit.
+ .
+ This is an internally deployed institutional image, not a public
+ distribution.

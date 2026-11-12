@@ -1,0 +1,64 @@
+/* DCT OS — Calamares stylesheet.
+   Install to /etc/calamares/branding/dct/stylesheet.qss
+   Colours mirror payload/branding/tokens.env.
+   Qt stylesheets are limited; keep selectors defensive — an unknown widget
+   is ignored, but a malformed rule kills the whole sheet. */
+
+QWidget {
+    font-family: "Inter", "DejaVu Sans", sans-serif;
+    font-size: 10pt;
+}
+
+#mainApp {
+    background-color: #0B2545;
+}
+
+#sidebarApp {
+    background-color: #071A33;
+}
+
+QLabel {
+    color: #FFFFFF;
+}
+
+QLabel#headerLabel {
+    color: #F2C14E;
+    font-size: 14pt;
+    font-weight: bold;
+}
+
+QLineEdit, QComboBox, QSpinBox, QPlainTextEdit {
+    background-color: #FFFFFF;
+    color: #0B2545;
+    border: 1px solid #B8C4D9;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+QPushButton {
+    background-color: #13315C;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 18px;
+}
+
+QPushButton:hover {
+    background-color: #1B4079;
+}
+
+QPushButton:disabled {
+    background-color: #3A4A66;
+    color: #B8C4D9;
+}
+
+QProgressBar {
+    border: 1px solid #B8C4D9;
+    border-radius: 4px;
+    text-align: center;
+    color: #FFFFFF;
+}
+
+QProgressBar::chunk {
+    background-color: #F2C14E;
+}

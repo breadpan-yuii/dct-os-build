@@ -1,0 +1,24 @@
+{
+  "policies": {
+    "Homepage": {
+      "URL": "https://dct.edu.ph",
+      "StartPage": "homepage"
+    },
+    "DisableTelemetry": true,
+    "DisableFirefoxStudies": true,
+    "DisablePocket": true,
+    "DisableFeedbackCommands": true,
+    "OverrideFirstRunPage": "",
+    "OverridePostUpdatePage": "",
+    "DontCheckDefaultBrowser": true,
+    "Bookmarks": [
+      { "Title": "DCT Portal",    "URL": "https://dct.edu.ph",              "Placement": "toolbar" },
+      { "Title": "DCT LMS",       "URL": "https://lms.dct.edu.ph",          "Placement": "toolbar" },
+      { "Title": "Student Email", "URL": "https://mail.dct.edu.ph",         "Placement": "toolbar" },
+      { "Title": "Library",       "URL": "https://library.dct.edu.ph",      "Placement": "toolbar" }
+    ],
+    "SearchEngines": {
+      "Default": "DuckDuckGo"
+    }
+  }
+}

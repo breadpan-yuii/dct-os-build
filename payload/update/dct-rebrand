@@ -1,0 +1,30 @@
+#!/bin/sh
+# ---------------------------------------------------------------------------
+# dct-rebrand — put the DCT identity back after a package transaction.
+#
+# Called from /etc/apt/apt.conf.d/99dct-branding after every dpkg run.
+# Deliberately narrow: identity files, schema overrides, wallpaper paths.
+# It never rebuilds the initramfs and never calls apt, so it cannot recurse.
+#
+#   sudo dct-rebrand            # verbose
+#   sudo dct-rebrand --quiet    # what the apt hook uses
+# ---------------------------------------------------------------------------
+set -eu
+
+DCT_SHARE=/usr/share/dct-os
+SCRIPT="$DCT_SHARE/apply-branding.sh"
+
+# Not installed in this layout — nothing to do, and definitely not an error.
+[ -x "$SCRIPT" ] || exit 0
+
+quiet=0
+[ "${1:-}" = "--quiet" ] && quiet=1
+
+if [ "$quiet" -eq 1 ]; then
+    "$SCRIPT" --no-grub --no-initramfs --no-plymouth --no-shield \
+        >/dev/null 2>&1 || true
+else
+    exec "$SCRIPT" --no-grub --no-initramfs --no-plymouth --no-shield
+fi
+
+exit 0

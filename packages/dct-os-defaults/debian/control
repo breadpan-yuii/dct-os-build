@@ -1,0 +1,26 @@
+Source: dct-os-defaults
+Section: admin
+Priority: optional
+Maintainer: DCT IT Services <it@dct.edu.ph>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: dct-os-defaults
+Architecture: all
+Depends: ${misc:Depends},
+         libglib2.0-bin,
+         grub2-common,
+         plymouth
+Description: DCT OS identity, theme and desktop defaults
+ Ships the DCT OS branding payload and applies it: /etc/os-release identity,
+ GRUB theme, Plymouth splash, GLib schema overrides, Firefox policy, and the
+ default user skeleton.
+ .
+ Branding is applied by /usr/share/dct-os/apply-branding.sh, which is
+ idempotent and can be re-run at any time:
+ .
+   sudo /usr/share/dct-os/apply-branding.sh
+ .
+ This package diverts /etc/os-release (see postinst) because base-files owns
+ that path and would otherwise overwrite the DCT OS identity on upgrade.

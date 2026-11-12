@@ -1,0 +1,52 @@
+
+[1;36m-- machine [0m
+hostname:              JustinOmarchy
+date:                  2026-11-11T21:23:40-05:00
+vendor:                Dell Inc.
+product:               OptiPlex 3000
+board:                 01KTG7
+bios:                  1.40.0 (04/23/2026)
+
+[1;36m-- boot mode [0m
+boot_mode:             UEFI
+efi_runtime:           present
+secureboot_efivar:     0
+setup_mode:            1
+
+[1;36m-- secure boot state [0m
+  mokutil not installed (apt install mokutil)
+
+[1;36m-- boot chain packages [0m
+shim-signed:           not installed
+sbctl:                 not installed
+sbsigntools:           not installed
+mokutil:               not installed
+grub:                  not installed
+efibootmgr:            18-4
+  (Debian names like shim-signed/grub-efi-amd64-signed do not apply here.)
+
+[1;36m-- signatures on disk [0m
+  sbsigntool not installed — cannot inspect signatures
+
+[1;36m-- enrolled Machine Owner Keys (MOK) [0m
+  mokutil not installed — install it (apt install mokutil / pacman -S mokutil)
+
+[1;36m-- firmware boot entries [0m
+  BootCurrent: 0006
+  BootOrder: 0006,0005,0000,0001,0002,0003
+  Boot0000* UEFI BC711 NVMe SK hynix 512GB FNB7N794411608466 1
+  Boot0001* ONBOARD NIC (IPV4)
+  Boot0002* ONBOARD NIC (IPV6)
+  Boot0003* UEFI HTTPs Boot (MAC:00BE43F72020)
+  Boot0005* Windows Boot Manager
+  Boot0006* Limine
+
+[1;36m-- other OS / encryption [0m
+  ├─nvme0n1p3      ntfs                    
+  ├─nvme0n1p4      ntfs        Games       
+  └─nvme0n1p7      ntfs                    
+
+[1;31m VERDICT: DISABLED+SETUPMODE[0m  (Secure Boot off AND no Platform Key enrolled — trust store has no owner)
+  The signed chain still boots here, but re-enrolling keys later needs the
+    original vendor keys. Back up PK/KEK/db before changing anything.
+MACHINE|JustinOmarchy|DISABLED+SETUPMODE|0|1.40.0|omarchy-4.5.0

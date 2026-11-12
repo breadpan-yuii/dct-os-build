@@ -1,0 +1,2 @@
+stage/payload          usr/share/dct-os/
+stage/apply-branding.sh usr/share/dct-os/

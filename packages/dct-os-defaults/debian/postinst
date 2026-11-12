@@ -1,0 +1,25 @@
+#!/bin/sh
+set -e
+
+# ---------------------------------------------------------------------------
+# /etc/os-release is owned by base-files. If we just overwrite it, the next
+# base-files upgrade silently reverts the machine to "Ubuntu 24.04.4 LTS".
+# dpkg-divert is the correct tool: base-files keeps writing to .dctorig, and
+# our file stays put.
+# ---------------------------------------------------------------------------
+if ! dpkg-divert --list /etc/os-release | grep -q 'dct-os-defaults'; then
+    dpkg-divert --package dct-os-defaults --divert /etc/os-release.dctorig \
+                --rename /etc/os-release
+fi
+
+# Re-apply branding. The script is idempotent and tolerates missing assets.
+if [ -x /usr/share/dct-os/apply-branding.sh ]; then
+    /usr/share/dct-os/apply-branding.sh || \
+        echo "dct-os-defaults: branding script reported a problem (non-fatal)" >&2
+fi
+
+if [ -d /usr/share/glib-2.0/schemas ]; then
+    glib-compile-schemas /usr/share/glib-2.0/schemas || true
+fi
+
+exit 0

@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=DCT OS
+Description=DCT OS boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/dct
+ScriptFile=/usr/share/plymouth/themes/dct/dct.script

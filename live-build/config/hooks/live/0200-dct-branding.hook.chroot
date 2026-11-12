@@ -1,0 +1,26 @@
+#!/bin/sh
+# Runs INSIDE the live-build chroot, after the packages are in place.
+# Re-applies branding so any later package (casper, plymouth, calamares) that
+# touched these paths gets overridden.
+set -e
+
+if [ -x /usr/share/dct-os/apply-branding.sh ]; then
+    echo "DCT: applying branding"
+    /usr/share/dct-os/apply-branding.sh --no-initramfs
+else
+    echo "DCT: apply-branding.sh missing — dct-os-defaults did not install" >&2
+    exit 1
+fi
+
+# Trim the LibreOffice locale bloat that Zorin ships 13 of.
+if command -v dpkg >/dev/null 2>&1; then
+    for p in $(dpkg-query -W -f='${Package}\n' 'libreoffice-l10n-*' \
+               'libreoffice-help-*' 2>/dev/null); do
+        case "$p" in
+            *-en | *-en-gb | *-en-us | *-en-za) ;;   # keep
+            *) dpkg --purge "$p" >/dev/null 2>&1 || true ;;
+        esac
+    done
+fi
+
+echo "DCT: branding applied"

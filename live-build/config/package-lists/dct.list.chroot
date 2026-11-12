@@ -1,0 +1,30 @@
+# Packages baked into the DCT OS live image.
+# Keep this list short and let dct-os-desktop pull the rest — one place to edit.
+
+dct-os-desktop
+dct-os-defaults
+
+# installer
+calamares
+calamares-settings-ubuntu-common
+
+# classroom + resilience
+epoptes-client
+timeshift
+
+# office
+libreoffice-writer
+libreoffice-calc
+libreoffice-impress
+libreoffice-gnome
+
+# wine stack (licences for MS Office itself are NOT included — see docs/licensing.md)
+wine
+winetricks
+
+# OnlyOffice: requires a third-party apt source. Uncomment only after you have
+# placed the signing key in config/archives/onlyoffice.key.chroot
+# onlyoffice-desktopeditors
+
+# Philippine locale support
+language-pack-en
