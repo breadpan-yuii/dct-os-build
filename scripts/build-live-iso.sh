@@ -489,7 +489,8 @@ if [ "$DO_INITRAMFS" -eq 1 ]; then
         chroot_enter
         # Absolute paths: the host's PATH does not necessarily contain
         # /usr/sbin, so a bare `update-initramfs` can fail with "No such file".
-        if chroot "$ROOTFS" /usr/sbin/update-initramfs -u -k "$KVER" >"$LOGDIR/initramfs.log" 2>&1; then
+        if chroot "$ROOTFS" env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+                /usr/sbin/update-initramfs -u -k "$KVER" >"$LOGDIR/initramfs.log" 2>&1; then
             new="$ROOTFS/boot/initrd.img-$KVER"
             listing="$(chroot "$ROOTFS" /usr/bin/lsinitramfs "/boot/initrd.img-$KVER" 2>/dev/null || true)"
             if [ ! -s "$new" ]; then
