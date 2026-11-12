@@ -725,21 +725,23 @@ for l in $casper_list; do
     esac
     keep=0
     for c in "${CHAIN[@]}"; do [ "$l" = "$c" ] && keep=1; done
-    [ "$keep" -eq 1 ] || RM+=( -rm "/casper/$l" )
+    [ "$keep" -eq 1 ] || RM+=( "/casper/$l" )
 done
 # Stale checksums and a signature that can no longer be valid.
 for f in SHA256SUMS SHA256SUMS.gpg; do
-    printf '%s\n' "$casper_list" | grep -qx "$f" && RM+=( -rm "/casper/$f" )
+    printf '%s\n' "$casper_list" | grep -qx "$f" && RM+=( "/casper/$f" )
 done
-[ ${#RM[@]} -gt 0 ] && ok "removing $(( ${#RM[@]} / 2 )) stale casper file(s)"
+[ ${#RM[@]} -gt 0 ] && ok "removing ${#RM[@]} stale casper file(s)"
+RM_ARGS=()
+[ ${#RM[@]} -gt 0 ] && RM_ARGS=( -rm "${RM[@]}" )
 
 set +e
 xorriso -indev "$BASE" -outdev "$OUTISO" \
     -boot_image any replay \
-    "${RM[@]}" \
     "${MAP[@]}" \
     -volid "$VOLID" \
     -changes_pending yes \
+    "${RM_ARGS[@]}" \
     >"$LOGDIR/xorriso.log" 2>&1
 xor_rc=$?
 set -e
