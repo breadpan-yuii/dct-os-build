@@ -26,7 +26,9 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
-TMP="${TMPDIR:-/tmp}/dct-iso-test.$$"
+TMP_BASE="${TMPDIR:-$REPO/.iso-work}"
+mkdir -p "$TMP_BASE"
+TMP="$TMP_BASE/dct-iso-test.$$"
 mkdir -p "$TMP"
 trap 'rm -rf "$TMP"' EXIT
 
