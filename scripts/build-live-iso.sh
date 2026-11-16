@@ -192,6 +192,21 @@ chroot_enter() {
         fi
     done
     [ -f /etc/resolv.conf ] && cp -f /etc/resolv.conf "$ROOTFS/etc/resolv.conf" 2>/dev/null || true
+
+    # initramfs-tools unpacks through /var/tmp. Give it a real, disposable
+    # scratch dir: it keeps ~300 MB of extraction out of the squashfs and
+    # guarantees the space unmkinitramfs needs.
+    local vt="$ROOTFS/var/tmp"
+    [ -L "$vt" ] && rm -f "$vt"
+    while mountpoint -q "$vt" 2>/dev/null; do
+        umount -R "$vt" 2>/dev/null || die "stale mount at $vt cannot be unmounted"
+    done
+    mkdir -p "$vt"
+    if mount -t tmpfs -o size=2G,mode=1777 tmpfs "$vt" 2>/dev/null; then
+        CHROOT_MOUNTS+=("$vt")
+    else
+        warn "could not mount tmpfs on /var/tmp"
+    fi
 }
 chroot_leave() {
     local i m
@@ -547,9 +562,17 @@ if [ "$DO_INITRAMFS" -eq 1 ]; then
         if chroot "$ROOTFS" env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
                 /usr/sbin/update-initramfs -u -k "$KVER" >"$LOGDIR/initramfs.log" 2>&1; then
             new="$ROOTFS/boot/initrd.img-$KVER"
-            listing="$(chroot "$ROOTFS" /usr/bin/lsinitramfs "/boot/initrd.img-$KVER" 2>/dev/null || true)"
+            # lsinitramfs unpacks through unmkinitramfs, which needs a writable
+            # scratch dir — /var/tmp. Keep its stderr: without it a failure
+            # looks identical to an initrd that genuinely lacks casper.
+            chroot "$ROOTFS" env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+                TMPDIR=/var/tmp /usr/bin/lsinitramfs "/boot/initrd.img-$KVER" \
+                >"$LOGDIR/initrd-contents.txt" 2>"$LOGDIR/lsinitramfs.log" || true
+            listing="$(cat "$LOGDIR/initrd-contents.txt" 2>/dev/null)"
             if [ ! -s "$new" ]; then
                 warn "rebuilt initrd is empty — keeping Ubuntu's"
+            elif [ -z "$listing" ]; then
+                warn "could not list the rebuilt initrd — keeping Ubuntu's (see $LOGDIR/lsinitramfs.log)"
             elif ! printf '%s\n' "$listing" | grep -q 'scripts/casper'; then
                 # Without casper in the initrd the image cannot boot at all.
                 warn "rebuilt initrd has no casper hooks — keeping Ubuntu's"

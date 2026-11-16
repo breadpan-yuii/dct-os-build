@@ -135,9 +135,12 @@ fi
 # DCT. Only check when the dct theme and an alternative both exist.
 if [ -e "$T/usr/share/plymouth/themes/dct/dct.plymouth" ] \
    && { [ -e "$T/etc/alternatives/default.plymouth" ] || [ -L "$T/etc/alternatives/default.plymouth" ]; }; then
-    alt="$(readlink -f "$T/etc/alternatives/default.plymouth" 2>/dev/null)"
+    # readlink, not readlink -f: the target is an absolute path inside the
+    # tree under test, which does not exist on the host.
+    alt="$(readlink "$T/etc/alternatives/default.plymouth" 2>/dev/null)"
     case "$alt" in
         *themes/dct/*) p "default.plymouth alternative is dct (initrd splash will be DCT)" ;;
+        "") f "default.plymouth alternative is not a symlink — early splash stays upstream" ;;
         *) f "default.plymouth alternative is ${alt##*/} — early splash stays upstream" ;;
     esac
 fi
