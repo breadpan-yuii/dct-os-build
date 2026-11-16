@@ -399,6 +399,7 @@ done
 # The initrd lives outside the squashfs on this layout; extract it for reference.
 if [ -z "$INITRD_PATH" ] && printf '%s\n' "$casper_list" | grep -qx 'initrd'; then
     mkdir -p "$EXTRAS/casper"
+    rm -f "$EXTRAS/casper/initrd"
     xorriso -osirrox on -indev "$BASE" -extract /casper/initrd "$EXTRAS/casper/initrd" 2>/dev/null \
         && INITRD_PATH="casper/initrd" && ok "initrd extracted for reference"
 fi
@@ -578,7 +579,7 @@ if [ "$DO_INITRAMFS" -eq 1 ]; then
                     # matches the ISO.
                     warn "could not read the new initrd UUID — keeping Ubuntu's"
                 else
-                    mkdir -p "$EXTRAS/$INITRD_PATH" "$EXTRAS/.disk"
+                    mkdir -p "$EXTRAS/$(dirname "$INITRD_PATH")" "$EXTRAS/.disk"
                     cp -f "$new" "$EXTRAS/$INITRD_PATH"
                     printf '%s\n' "$NEWUUID" > "$EXTRAS/.disk/casper-uuid-generic"
                     INITRD_REBUILT=1
