@@ -198,12 +198,13 @@ bind-mounts the snap directory into it, so a bind over a *subdirectory* of the
 snap can be lost. Binding over the mountpoint itself means whatever snap-confine
 binds already contains the overlay.
 
-The same unit re-applies the launcher name and icon, because snapd rewrites
+The same unit re-applies the launcher name and icon, because snapd writes
 `/var/lib/snapd/desktop/applications/ubuntu-desktop-bootstrap_*.desktop` when it
-links the snap. Text baked into `libapp.so` ("Install Ubuntu", the release name)
-is not reachable without rebuilding the snap, so the release name is carried by
-`/.disk/info` instead: casper's `25adduser` rewrites the launcher as
-`Install $RELEASE`, and `/.disk/info` already says `DCT OS`.
+links the snap. The build also drops a copy in `/usr/share/applications`, which
+is the one that normally wins. Text baked into `libapp.so` ("Install Ubuntu",
+the release name) is not reachable without rebuilding the snap, so the release
+name is carried by `/.disk/info` instead: casper's `25adduser` rewrites the
+launcher as `Install $RELEASE`, and `/.disk/info` already says `DCT OS`.
 
 The live session is try-only: `ubuntu-desktop-installer.service` is masked so
 the installer does not auto-start over the DCT desktop. It is started by hand

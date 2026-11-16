@@ -24,9 +24,10 @@ ASSETS_REL=bin/data/flutter_assets/packages/ubuntu_provision/assets
 SNAP_ROOT=${DCT_SNAP_ROOT:-/snap}
 SRC=${DCT_INSTALLER_ASSETS:-/usr/share/dct-os/payload/installer}
 RUN=${DCT_INSTALLER_RUN:-/run/dct-installer}
-# The launcher snapd generates for the installer. It is re-written whenever
-# snapd links the snap, so the name and icon are re-applied here rather than
-# only at build time.
+# The launcher snapd generates for the installer. snapd only writes it when it
+# links the snap, and the build already rewrites it; the copy in
+# /usr/share/applications (made by the build) is the one that normally wins.
+# Re-applying here costs nothing and covers a snapd that regenerates it.
 DESKTOP="${DCT_INSTALLER_DESKTOP_DIR:-/var/lib/snapd/desktop/applications}/${SNAP_NAME}_${SNAP_NAME}.desktop"
 
 log() { printf 'dct-installer-brand: %s\n' "$*"; }

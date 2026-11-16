@@ -1,10 +1,11 @@
 [Unit]
 Description=DCT OS artwork for the Ubuntu desktop installer
 Documentation=file:///usr/share/dct-os/README.md
-# snapd writes the installer's launcher when it links the snap, so wait for it
-# before rewriting that launcher. The snap's own mount unit is named after its
-# revision, so order against the target that collects those mounts instead.
-After=snapd.service snapd.mounts.target
+# The snap's own mount unit is named after its revision, so order against the
+# target that collects those mounts instead of a revision-specific unit. This
+# deliberately does not wait for snapd.service: seeding runs at every live boot
+# and the desktop must not queue behind it.
+After=snapd.mounts.target
 RequiresMountsFor=/snap/ubuntu-desktop-bootstrap/current
 Before=display-manager.service
 ConditionPathExists=/snap/ubuntu-desktop-bootstrap/current/bin/data/flutter_assets/packages/ubuntu_provision/assets/whitelabel.yml
