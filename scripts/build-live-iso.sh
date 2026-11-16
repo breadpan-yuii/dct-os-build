@@ -428,15 +428,25 @@ say "applying DCT branding"
     || die "apply-branding failed"
 
 # Ubuntu's live layer automatically opens ubuntu-desktop-bootstrap in the
-# graphical session ("Welcome to Ubuntu" / "Preparing Ubuntu..."). Its UI is
-# not rebrandable from this remaster. This is a try-only demo image: mask the
-# auto-start and hide its launcher rather than present an Ubuntu installer as
-# DCT OS. The separate installed-system installer work remains in the repo.
+# graphical session ("Welcome to Ubuntu" / "Preparing Ubuntu..."). This is a
+# try-only demo image: mask the auto-start so the session lands on the DCT
+# desktop, but keep the installer reachable from the app grid under a DCT name
+# and icon. Its artwork is overlaid on the snap at boot by
+# dct-installer-brand.service, which apply-branding installs.
 mkdir -p "$ROOTFS/etc/systemd/user"
 ln -sfn /dev/null "$ROOTFS/etc/systemd/user/ubuntu-desktop-installer.service"
 installer_desktop="$ROOTFS/var/lib/snapd/desktop/applications/ubuntu-desktop-bootstrap_ubuntu-desktop-bootstrap.desktop"
 if [ -f "$installer_desktop" ]; then
-    sed -i '/^NoDisplay=/d; s/^Name=.*/Name=Install DCT OS/; $aNoDisplay=true' "$installer_desktop"
+    sed -i -e '/^NoDisplay=/d' \
+           -e 's/^Name=.*/Name=Install DCT OS/' \
+           -e 's/^Icon=.*/Icon=dct-os/' "$installer_desktop"
+    # snapd owns the file above and may rewrite it; a copy in
+    # /usr/share/applications takes precedence and cannot be clobbered.
+    install -D -m 0644 "$installer_desktop" \
+        "$ROOTFS/usr/share/applications/$(basename "$installer_desktop")"
+    ok "installer launcher -> Install DCT OS (icon dct-os)"
+else
+    warn "no installer desktop entry found — launcher keeps the Ubuntu name"
 fi
 ok "Ubuntu installer auto-launch masked; live session is try-only"
 

@@ -168,6 +168,47 @@ with an unknown medium UUID cannot boot.
 > The remaster is reproducible from a checksummed upstream image and is the only
 > path that keeps the signed boot chain intact.
 
+### The installer
+
+The live image installs with Canonical's `ubuntu-desktop-bootstrap` snap — the
+Flutter installer that replaced Ubiquity. It is a signed, seeded snap, so it is
+not repacked: snapd verifies the seed and would reject a modified `.snap`.
+
+Its UI is drawn from six files inside the snap:
+
+```
+bin/data/flutter_assets/packages/ubuntu_provision/assets/
+    images/logo-light.svg   images/logo-dark.svg
+    images/mascot.svg       images/mascot_no_background.svg
+    theme/light-theme.png   theme/dark-theme.png
+```
+
+`scripts/make-installer-assets.py` traces `payload/assets/dct-logo.png` into
+those files (potrace, 4x supersampled, one compound path per asset, with a
+fidelity check that fails below IoU 0.90). `payload/installer/dct-installer-brand`
+then overlays them at boot:
+
+1. bind the snap's squashfs to `/run/dct-installer/lower`;
+2. copy the six files into `/run/dct-installer/upper` (a few hundred KB);
+3. mount overlayfs at `/run/dct-installer/merged`;
+4. bind that over the snap's own mountpoint, `/snap/ubuntu-desktop-bootstrap/<rev>`.
+
+Step 4 matters. `snap-confine` builds a private mount namespace and
+bind-mounts the snap directory into it, so a bind over a *subdirectory* of the
+snap can be lost. Binding over the mountpoint itself means whatever snap-confine
+binds already contains the overlay.
+
+The same unit re-applies the launcher name and icon, because snapd rewrites
+`/var/lib/snapd/desktop/applications/ubuntu-desktop-bootstrap_*.desktop` when it
+links the snap. Text baked into `libapp.so` ("Install Ubuntu", the release name)
+is not reachable without rebuilding the snap, so the release name is carried by
+`/.disk/info` instead: casper's `25adduser` rewrites the launcher as
+`Install $RELEASE`, and `/.disk/info` already says `DCT OS`.
+
+The live session is try-only: `ubuntu-desktop-installer.service` is masked so
+the installer does not auto-start over the DCT desktop. It is started by hand
+from the app grid, as **Install DCT OS**.
+
 ## Native path (if containers cannot mount)
 
 On a real Ubuntu 24.04 host:
@@ -226,4 +267,5 @@ boots the ISO's own kernel and initrd in text mode and waits for a login prompt.
 | Wine + winetricks | Ubuntu archive |
 | OnlyOffice | optional third-party repo — **disabled by default**, see `config/archives/` |
 | Calamares installer with DCT branding | Ubuntu archive + `installer/` |
+| DCT artwork in the Ubuntu desktop installer | `payload/installer/`, overlaid at boot |
 | Microsoft Office | **never** — see `licensing.md` |

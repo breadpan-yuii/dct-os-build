@@ -211,6 +211,43 @@ else
     w "cannot inspect diversions here (no dpkg database)"
 fi
 
+echo "== installer =="
+if exists "/usr/share/dct-os/dct-installer-brand"; then
+    [ -x "$T/usr/share/dct-os/dct-installer-brand" ] \
+        && p "installer brand script executable" \
+        || f "/usr/share/dct-os/dct-installer-brand is not executable"
+    if exists "/etc/systemd/system/dct-installer-brand.service"; then
+        p "installer brand unit installed"
+        # -L, not -e: the symlink target is absolute and resolves only inside
+        # the target root, so -e would follow it out of the image.
+        [ -L "$T/etc/systemd/system/multi-user.target.wants/dct-installer-brand.service" ] \
+            && p "installer brand unit enabled" \
+            || f "dct-installer-brand.service is not enabled — artwork will not load"
+    else
+        f "no dct-installer-brand.service"
+    fi
+    missing=""
+    for f in logo-light.svg logo-dark.svg mascot.svg mascot_no_background.svg \
+             light-theme.png dark-theme.png; do
+        [ -f "$T/usr/share/dct-os/payload/installer/$f" ] || missing="$missing $f"
+    done
+    [ -z "$missing" ] && p "installer artwork staged (6 files)" \
+        || f "installer artwork missing:$missing"
+    exists "/usr/share/icons/hicolor/scalable/apps/dct-os.svg" \
+        && p "installer launcher icon installed" \
+        || f "no dct-os.svg icon — the installer launcher has no icon"
+    launcher="$T/var/lib/snapd/desktop/applications/ubuntu-desktop-bootstrap_ubuntu-desktop-bootstrap.desktop"
+    if [ -f "$launcher" ]; then
+        if grep -q '^Icon=dct-os' "$launcher" && grep -q '^Name=Install DCT OS' "$launcher"; then
+            p "installer launcher branded (name + icon)"
+        else
+            f "installer launcher still says Ubuntu"
+        fi
+    fi
+else
+    w "no installer brand script (fine if this system has no desktop installer)"
+fi
+
 echo "== package layer =="
 if command -v dpkg-query >/dev/null 2>&1 && [ "$ROOT" = "/" ]; then
     for pkg in dct-os-defaults dct-os-desktop; do

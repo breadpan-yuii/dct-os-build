@@ -377,6 +377,59 @@ branding_calamares() {
 }
 
 # ---------------------------------------------------------------------------
+# 6b. Ubuntu desktop installer artwork
+#
+# The live image installs with Canonical's `ubuntu-desktop-bootstrap` snap. The
+# snap is signed and seeded, so it is never repacked — instead a boot unit
+# overlays DCT artwork on the snap's Flutter assets. See
+# payload/installer/dct-installer-brand for why the overlay is mounted on the
+# snap mountpoint itself.
+# ---------------------------------------------------------------------------
+branding_installer() {
+    local seed="$T/var/lib/snapd/seed/snaps" f have=0
+    for f in "$seed"/ubuntu-desktop-bootstrap_*.snap; do
+        [ -e "$f" ] && have=1
+    done
+    if [ "$have" -eq 0 ] && [ ! -d "$T/snap/ubuntu-desktop-bootstrap" ]; then
+        say "ubuntu-desktop-bootstrap (not installed, skipped)"
+        return 0
+    fi
+    say "installer artwork"
+
+    install_file "$PAYLOAD/installer/dct-installer-brand" \
+                 /usr/share/dct-os/dct-installer-brand 0755
+    install_file "$PAYLOAD/installer/dct-installer-brand.service" \
+                 /etc/systemd/system/dct-installer-brand.service
+    install_file "$PAYLOAD/installer/dct-os.svg" \
+                 /usr/share/icons/hicolor/scalable/apps/dct-os.svg
+
+    # The artwork rides along with the payload copy in the update shield, but
+    # stage it explicitly so this step also works with --no-shield.
+    local n=0
+    for f in logo-light.svg logo-dark.svg mascot.svg mascot_no_background.svg \
+             light-theme.png dark-theme.png; do
+        [ -f "$T/usr/share/dct-os/payload/installer/$f" ] && n=$((n + 1))
+    done
+    if [ "$n" -lt 6 ]; then
+        run install -d -m 0755 "$T/usr/share/dct-os/payload/installer"
+        run cp -a "$PAYLOAD/installer/." "$T/usr/share/dct-os/payload/installer/"
+    fi
+
+    if [ "$DRY" -eq 1 ]; then
+        printf '     + ln -s /etc/systemd/system/dct-installer-brand.service \\\n'
+        printf '           /etc/systemd/system/multi-user.target.wants/dct-installer-brand.service\n'
+    else
+        # Write the wants symlink directly: `systemctl enable` needs a working
+        # systemd in the target root, which a chroot does not have.
+        run install -d -m 0755 "$T/etc/systemd/system/multi-user.target.wants"
+        run ln -sfn /etc/systemd/system/dct-installer-brand.service \
+            "$T/etc/systemd/system/multi-user.target.wants/dct-installer-brand.service"
+        ok "dct-installer-brand.service enabled"
+    fi
+    ok "installer artwork staged (overlaid on the snap at boot)"
+}
+
+# ---------------------------------------------------------------------------
 # 7. Default user skeleton
 # ---------------------------------------------------------------------------
 branding_skel() {
@@ -417,6 +470,7 @@ main() {
     branding_grub
     branding_plymouth
     branding_calamares
+    branding_installer
     branding_skel
 
     say "done"

@@ -1,0 +1,71 @@
+#!/bin/sh
+# ---------------------------------------------------------------------------
+# dct-installer-brand — put DCT artwork into the Ubuntu installer snap.
+#
+# The installer on the live image is Canonical's `ubuntu-desktop-bootstrap`
+# snap. It is signed and seeded, so it is never repacked: snapd verifies the
+# seed and a modified .snap would be rejected. Instead the snap's squashfs is
+# wrapped in an overlayfs whose upper layer carries only the six artwork files.
+#
+# The overlay is mounted on the snap's own mountpoint rather than on a
+# subdirectory, because `snap-confine` sets up a private mount namespace and
+# bind-mounts the snap directory into it. Binding at the mountpoint means that
+# bind picks up the overlay whatever flags snap-confine uses.
+#
+# Runs once per boot from dct-installer-brand.service. Safe to run again.
+# ---------------------------------------------------------------------------
+set -eu
+
+SNAP_NAME=ubuntu-desktop-bootstrap
+ASSETS_REL=bin/data/flutter_assets/packages/ubuntu_provision/assets
+SRC=/usr/share/dct-os/payload/installer
+RUN=/run/dct-installer
+# The launcher snapd generates for the installer. It is re-written whenever
+# snapd links the snap, so the name and icon are re-applied here rather than
+# only at build time.
+DESKTOP=/var/lib/snapd/desktop/applications/${SNAP_NAME}_${SNAP_NAME}.desktop
+
+log() { printf 'dct-installer-brand: %s\n' "$*"; }
+
+# Launcher: DCT name and icon, and visible (the live session is try-only, so
+# the installer must be started by hand from the app grid).
+if [ -f "$DESKTOP" ]; then
+    sed -i -e '/^NoDisplay=/d' \
+           -e 's/^Name=.*/Name=Install DCT OS/' \
+           -e 's/^Icon=.*/Icon=dct-os/' "$DESKTOP"
+    log "launcher -> Install DCT OS (icon dct-os)"
+fi
+
+# Nothing to brand on a system that does not have the installer snap.
+[ -d "/snap/$SNAP_NAME/current" ] || { log "no $SNAP_NAME snap, nothing to do"; exit 0; }
+
+SNAP_DIR="$(readlink -f "/snap/$SNAP_NAME/current")"
+[ -d "$SNAP_DIR/$ASSETS_REL" ] || { log "snap has no Flutter assets, nothing to do"; exit 0; }
+[ -f "$SRC/logo-light.svg" ] || { log "artwork missing from $SRC"; exit 1; }
+
+if mountpoint -q "$RUN/merged"; then
+    log "already branded"
+    exit 0
+fi
+
+mkdir -p "$RUN/lower" "$RUN/upper" "$RUN/work" "$RUN/merged"
+
+# Keep a handle on the real squashfs: the bind below hides it.
+mount --bind "$SNAP_DIR" "$RUN/lower"
+
+# Copy just the artwork into the writable layer; everything else comes from
+# the read-only lower layer, so the upper layer stays a few hundred KB.
+install -d "$RUN/upper/$ASSETS_REL/images" "$RUN/upper/$ASSETS_REL/theme"
+for f in logo-light.svg logo-dark.svg mascot.svg mascot_no_background.svg; do
+    install -m 0644 "$SRC/$f" "$RUN/upper/$ASSETS_REL/images/$f"
+done
+for f in light-theme.png dark-theme.png; do
+    install -m 0644 "$SRC/$f" "$RUN/upper/$ASSETS_REL/theme/$f"
+done
+
+mount -t overlay overlay \
+    -o "lowerdir=$RUN/lower,upperdir=$RUN/upper,workdir=$RUN/work" \
+    "$RUN/merged"
+mount --bind "$RUN/merged" "$SNAP_DIR"
+
+log "artwork overlaid on $SNAP_DIR"
