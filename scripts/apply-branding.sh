@@ -267,6 +267,16 @@ branding_plymouth() {
                 && ok "splash set (initramfs not rebuilt)" \
                 || warn "plymouth-set-default-theme failed"
         fi
+    elif in_target test -x /usr/bin/update-alternatives; then
+        # Ubuntu 24.04 dropped plymouth-set-default-theme. The initramfs
+        # plymouth hook reads the default.plymouth ALTERNATIVE, not
+        # /etc/plymouth/plymouthd.conf, so this is what puts the DCT splash
+        # into the initrd.
+        in_target update-alternatives --install \
+            /usr/share/plymouth/themes/default.plymouth default.plymouth \
+            /usr/share/plymouth/themes/dct/dct.plymouth 200 >/dev/null 2>&1 \
+            && ok "splash set via update-alternatives" \
+            || warn "could not register the dct plymouth alternative"
     else
         warn "plymouth not installed — skipping"
     fi

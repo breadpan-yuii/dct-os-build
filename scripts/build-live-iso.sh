@@ -12,7 +12,7 @@
 #
 # Ubuntu 24.04.5 no longer ships one filesystem.squashfs. It ships a layered
 # image and the live initrd selects a chain via
-#   /conf/conf.d/default-layer.conf: LAYERFS_PATH=minimal.standard.live.squashfs
+#   /etc/casper.conf: LAYERFS_PATH=minimal.standard.live.squashfs
 # casper mounts minimal -> minimal.standard -> minimal.standard.live as an
 # overlay. We reproduce that union, brand it, then write the whole branded
 # system into the BASE layer and leave the upper layers empty but valid. That
@@ -377,11 +377,20 @@ fi
 
 # ISO-side config we patch and map back in.
 say "extracting boot config"
-for f in boot/grub/grub.cfg boot/grub/loopback.cfg casper/install-sources.yaml; do
+for f in boot/grub/grub.cfg boot/grub/loopback.cfg casper/install-sources.yaml .disk/info; do
     mkdir -p "$EXTRAS/$(dirname "$f")"
     xorriso -osirrox on -indev "$BASE" -extract "/$f" "$EXTRAS/$f" 2>/dev/null \
         && ok "$f" || warn "$f not in image"
 done
+
+# casper derives the live username and hostname from the first word of
+# /.disk/info (lowercased). Leaving "Ubuntu ..." here produces a live session
+# user and host called "ubuntu" even when everything else is branded.
+if [ -f "$EXTRAS/.disk/info" ]; then
+    printf '%s\n' "$DCT_PRETTY_NAME ($DCT_CODENAME) - Release amd64" \
+        > "$EXTRAS/.disk/info"
+    ok ".disk/info -> $(cat "$EXTRAS/.disk/info")"
+fi
 
 INITRD_PATH=""
 for p in casper/initrd casper/initrd.gz; do
@@ -520,6 +529,17 @@ if [ "$DO_INITRAMFS" -eq 1 ]; then
         warn "no kernel in the tree — keeping Ubuntu's initrd"
     else
         step "kernel: $KVER"
+
+        # casper reads the layer chain from /etc/casper.conf inside the initrd.
+        # Ubuntu bakes this in when it builds its own initrd; a rebuild from
+        # this tree would lose it, so write it before running the hook.
+        if [ -f "$ROOTFS/etc/casper.conf" ] \
+           && ! grep -q '^export LAYERFS_PATH=' "$ROOTFS/etc/casper.conf"; then
+            printf '\nexport LAYERFS_PATH="%s"\n' "$LIVE_LAYER" \
+                >> "$ROOTFS/etc/casper.conf"
+            ok "casper layer path -> $LIVE_LAYER"
+        fi
+
         chroot_enter
         # Absolute paths: the host's PATH does not necessarily contain
         # /usr/sbin, so a bare `update-initramfs` can fail with "No such file".
@@ -532,11 +552,11 @@ if [ "$DO_INITRAMFS" -eq 1 ]; then
             elif ! printf '%s\n' "$listing" | grep -q 'scripts/casper'; then
                 # Without casper in the initrd the image cannot boot at all.
                 warn "rebuilt initrd has no casper hooks — keeping Ubuntu's"
-            elif ! printf '%s\n' "$listing" | grep -q 'conf/conf.d/default-layer.conf'; then
-                # The layer chain lives in this file. Without it casper mounts
-                # whatever squashfs it finds, which can mean an empty upper
-                # layer on top of the branding.
-                warn "rebuilt initrd lost the layer config — keeping Ubuntu's"
+            elif ! printf '%s\n' "$listing" | grep -q 'conf/conf.d/default-boot-to-casper.conf'; then
+                # The casper initramfs hook generates this file (and uuid.conf)
+                # only when CASPER_GENERATE_UUID is set. Without it the live
+                # session never hands over to casper.
+                warn "rebuilt initrd lost the casper boot config — keeping Ubuntu's"
             elif ! printf '%s\n' "$listing" | grep -q 'plymouth/themes/dct'; then
                 warn "rebuilt initrd lacks the dct splash — keeping Ubuntu's"
             else
@@ -728,7 +748,7 @@ for ((i = 1; i < ${#CHAIN[@]}; i++)); do
     MAP+=( -map "$WORK/empty.squashfs" "/casper/${CHAIN[$i]}" )
 done
 
-for f in boot/grub/grub.cfg boot/grub/loopback.cfg casper/install-sources.yaml; do
+for f in boot/grub/grub.cfg boot/grub/loopback.cfg casper/install-sources.yaml .disk/info; do
     [ -f "$EXTRAS/$f" ] && MAP+=( -map "$EXTRAS/$f" "/$f" )
 done
 

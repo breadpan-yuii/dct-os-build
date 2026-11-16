@@ -113,7 +113,7 @@ The pipeline, in order:
 
 Ubuntu 24.04.5.1 no longer ships a single `filesystem.squashfs`. `/casper` holds
 `minimal.squashfs`, `minimal.standard.squashfs`, `minimal.standard.live.squashfs`
-plus per-language layers, and the initrd's `conf/conf.d/default-layer.conf` sets
+plus per-language layers, and the initrd's `/etc/casper.conf` sets
 `LAYERFS_PATH=minimal.standard.live.squashfs`. casper walks that name down one
 dot-component at a time and overlays the stack **live → standard → minimal**, so
 the live layer is topmost. The upper layers carry whiteouts that delete files
@@ -153,11 +153,14 @@ safeguards, none of which should be removed:
 
 ### Plymouth on 24.04
 
-Ubuntu 24.04 no longer ships `plymouth-set-default-theme`. The theme is selected
-by `Theme=dct` in `/etc/plymouth/plymouthd.conf`, which the initramfs hook reads.
+Ubuntu 24.04 no longer ships `plymouth-set-default-theme`. Runtime selection is
+`Theme=dct` in `/etc/plymouth/plymouthd.conf`, but the initramfs hook picks the
+theme from the `default.plymouth` **alternative**, so both are set: the
+alternative via `update-alternatives`, the runtime config via `plymouthd.conf`.
 The initrd is rebuilt only if the result still contains `scripts/casper`, the
-`default-layer.conf` layer chain and the dct theme; otherwise Ubuntu's original
-initrd is kept, because a rebuilt initrd with an unknown medium UUID cannot boot.
+casper boot config (`conf/conf.d/default-boot-to-casper.conf`) and the dct
+theme; otherwise Ubuntu's original initrd is kept, because a rebuilt initrd
+with an unknown medium UUID cannot boot.
 
 
 > Earlier drafts proposed `penguins-eggs`. It is dropped: it clones a *running*

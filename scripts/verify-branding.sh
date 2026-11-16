@@ -129,6 +129,19 @@ elif [ "$plymouth_ok" -eq 0 ]; then
 fi
 [ "$plymouth_ok" -eq 1 ] && p "plymouth theme is dct"
 
+# The initramfs plymouth hook selects the theme from the default.plymouth
+# ALTERNATIVE, not from plymouthd.conf. If the alternative still points at
+# bgrt, the early boot splash stays Ubuntu's even though the runtime theme is
+# DCT. Only check when the dct theme and an alternative both exist.
+if [ -e "$T/usr/share/plymouth/themes/dct/dct.plymouth" ] \
+   && { [ -e "$T/etc/alternatives/default.plymouth" ] || [ -L "$T/etc/alternatives/default.plymouth" ]; }; then
+    alt="$(readlink -f "$T/etc/alternatives/default.plymouth" 2>/dev/null)"
+    case "$alt" in
+        *themes/dct/*) p "default.plymouth alternative is dct (initrd splash will be DCT)" ;;
+        *) f "default.plymouth alternative is ${alt##*/} — early splash stays upstream" ;;
+    esac
+fi
+
 echo "== desktop =="
 OVR="$T/usr/share/glib-2.0/schemas/99_dct-os.gschema.override"
 if [ -r "$OVR" ]; then
