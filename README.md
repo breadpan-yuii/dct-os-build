@@ -66,6 +66,11 @@ container runtime, keeps Canonical's signed boot chain (so Secure Boot still
 works), and boots to a desktop **without installing anything**. The result lands
 in `dist/Dominican-OS-1.0-live-amd64.iso`.
 
+The lean build ships LibreOffice only. Add the office stack with
+`--with-office` (OnlyOffice default, LibreOffice fallback, Wine + winetricks as
+the compatibility layer for DCT's own licensed Office media). Microsoft Office
+is never bundled; see **`docs/office.md`** for the licensing and version rules.
+
 `./scripts/test-live-iso.sh` then boots that image in QEMU — a serial-console
 boot that waits for a login prompt, plus a UEFI/GRUB boot with screenshots. Do
 not skip it because the build said "ok".

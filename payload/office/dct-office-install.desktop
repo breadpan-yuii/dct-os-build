@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Install Microsoft Office (licensed media)
+Comment=Install the college's licensed Office 2016 into a Wine prefix
+Exec=/usr/local/bin/dct-office-install
+Icon=x-office-document
+Terminal=true
+Categories=Office;System;
+Keywords=office;word;excel;powerpoint;wine;install;

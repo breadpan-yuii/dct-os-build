@@ -31,7 +31,15 @@
 #   sudo ./scripts/build-live-iso.sh --fast     # zstd squashfs, ~3x faster
 #   sudo ./scripts/build-live-iso.sh --check-updates
 #   sudo ./scripts/build-live-iso.sh --no-extras   # skip the extra apt packages
+#   sudo ./scripts/build-live-iso.sh --with-office # + OnlyOffice, Wine, winetricks
+#   sudo ./scripts/build-live-iso.sh --with-office --office-media /path/to/office2016.iso
 #   ./scripts/build-live-iso.sh --dry-run       # preflight only
+#
+# --with-office installs OnlyOffice (the default office suite), LibreOffice
+# stays as the fallback, and Wine + winetricks become the compatibility layer
+# for the college's own licensed Microsoft Office 2016 media. Microsoft's
+# binaries are never redistributed in this image; --office-media embeds media
+# the college supplies and is licensed to deploy. See docs/office.md.
 #
 # Requires: xorriso, squashfs-tools  (pacman -S xorriso squashfs-tools)
 # ---------------------------------------------------------------------------
@@ -63,6 +71,8 @@ MNT="$WORK/mnt"
 
 FAST=0; KEEP_TREE=0; DRY=0; SKIP_VERIFY=0; DO_INITRAMFS=1; CHECK_UPDATES=0
 EXTRAS_PKGS=1
+OFFICE_PKGS=0
+OFFICE_MEDIA=""
 INITRD_REBUILT=0
 JOBS="$(nproc)"
 
@@ -80,6 +90,9 @@ while [ $# -gt 0 ]; do
         --no-verify)     SKIP_VERIFY=1 ;;
         --no-initramfs)  DO_INITRAMFS=0 ;;
         --no-extras)     EXTRAS_PKGS=0 ;;
+        --with-office)   OFFICE_PKGS=1 ;;
+        --no-office)     OFFICE_PKGS=0 ;;
+        --office-media)  OFFICE_MEDIA="${2:?--office-media needs a path}"; shift ;;
         --check-updates) CHECK_UPDATES=1 ;;
         --jobs)          JOBS="${2:?--jobs needs a number}"; shift ;;
         -h|--help)       awk 'NR>2 && /^# ----/{exit} NR>2' "$0" \
@@ -88,6 +101,15 @@ while [ $# -gt 0 ]; do
     esac
     shift
 done
+
+# --office-media embeds media the college owns and is licensed to deploy. It
+# is opt-in precisely because Microsoft's binaries must not live in this repo
+# or in a default image. Fail early if the path is wrong rather than half-way
+# through a 15-minute build.
+if [ -n "$OFFICE_MEDIA" ]; then
+    [ -e "$OFFICE_MEDIA" ] || die "--office-media path not found: $OFFICE_MEDIA"
+    OFFICE_PKGS=1
+fi
 
 [ "$(id -u)" -eq 0 ] || [ "$DRY" -eq 1 ] \
     || die "run with sudo (unsquashfs must preserve ownership and caps)"
@@ -391,6 +413,64 @@ if [ "$EXTRAS_PKGS" -eq 1 ]; then
         else
             warn "extras install failed — desktop falls back to Adwaita (see $LOGDIR/apt-extras.log)"
         fi
+
+        if [ "$OFFICE_PKGS" -eq 1 ]; then
+            say "installing the office stack (OnlyOffice + Wine)"
+
+            # OnlyOffice is a third-party package. Install the vendor .deb
+            # directly, verified against the checksum published in the
+            # vendor's own Packages index, so no third-party APT source and no
+            # long-lived signing key is added to the image.
+            oo_ver="10.0.0"
+            oo_deb="$WORK/onlyoffice-desktopeditors_${oo_ver}_amd64.deb"
+            oo_url="https://download.onlyoffice.com/repo/debian/pool/main/o/onlyoffice-desktopeditors/onlyoffice-desktopeditors_${oo_ver}_amd64.deb"
+            oo_sha="2190edb4022a2ac2f6eee0f78815520f0e4ece1e8a1097c645a6f9b225c8b59c"
+            if [ ! -f "$oo_deb" ]; then
+                curl -L -C - --retry 3 --retry-delay 5 -o "$oo_deb" "$oo_url" \
+                    || warn "OnlyOffice download failed"
+            fi
+            if [ -f "$oo_deb" ] && \
+               [ "$(sha256sum "$oo_deb" | cut -d' ' -f1)" = "$oo_sha" ]; then
+                install -m 0644 "$oo_deb" "$ROOTFS/tmp/onlyoffice.deb"
+                if chroot "$ROOTFS" env DEBIAN_FRONTEND=noninteractive \
+                        apt-get install -y /tmp/onlyoffice.deb \
+                        >"$LOGDIR/apt-onlyoffice.log" 2>&1; then
+                    ok "OnlyOffice installed (default office suite)"
+                else
+                    warn "OnlyOffice install failed (see $LOGDIR/apt-onlyoffice.log)"
+                fi
+                rm -f "$ROOTFS/tmp/onlyoffice.deb"
+            else
+                warn "OnlyOffice .deb missing or checksum mismatch — skipped"
+            fi
+
+            # Wine is the compatibility layer for the college's licensed
+            # Office media. Keep Recommends: fonts-wine, libcups2t64 and the
+            # gstreamer bits are what make Office 2016 usable.
+            if chroot "$ROOTFS" env DEBIAN_FRONTEND=noninteractive \
+                    apt-get install -y wine wine64 winetricks \
+                    cabextract p7zip-full unzip \
+                    >"$LOGDIR/apt-wine.log" 2>&1; then
+                ok "Wine + winetricks installed (Office compatibility layer)"
+            else
+                warn "Wine install failed (see $LOGDIR/apt-wine.log)"
+            fi
+
+            # Installer helper + menu entry. The helper contains no Microsoft
+            # binaries; it installs media the college supplies.
+            install -D -m 0755 "$REPO/payload/office/dct-office-install" \
+                "$ROOTFS/usr/local/bin/dct-office-install"
+            install -D -m 0644 "$REPO/payload/office/dct-office-install.desktop" \
+                "$ROOTFS/usr/share/applications/dct-office-install.desktop"
+            ok "Office installer helper staged"
+
+            if [ -n "$OFFICE_MEDIA" ]; then
+                install -d -m 0755 "$ROOTFS/opt/dct-office-media"
+                cp -a "$OFFICE_MEDIA" "$ROOTFS/opt/dct-office-media/"
+                ok "licensed Office media embedded at /opt/dct-office-media/"
+            fi
+        fi
+
         rm -rf "$ROOTFS/var/lib/apt/lists/"* "$ROOTFS/var/cache/apt/archives/"*.deb 2>/dev/null || true
     else
         warn "apt-get update failed — skipping extras (offline?)"
@@ -941,6 +1021,36 @@ if xorriso -osirrox on -indev "$OUTISO" \
     else
         warn "build stamp missing from squashfs"
     fi
+    if [ "$OFFICE_PKGS" -eq 1 ]; then
+        # grep -q exits on the first match and closes the pipe. For a large
+        # file (winetricks is ~800 KB) unsquashfs then dies on SIGPIPE (141),
+        # and `set -o pipefail` turns that into a false "missing". Disable
+        # pipefail around these content checks; the pipeline's status is then
+        # grep's, which is the answer we actually want.
+        if ( set +o pipefail
+             unsquashfs -q -cat "$WORK/verify.squashfs" \
+                 usr/share/applications/onlyoffice-desktopeditors.desktop 2>/dev/null \
+                 | grep -qi 'onlyoffice' ); then
+            ok "OnlyOffice desktop entry present in the squashfs"
+        else
+            warn "OnlyOffice desktop entry missing from the squashfs"
+        fi
+        if ( set +o pipefail
+             unsquashfs -q -cat "$WORK/verify.squashfs" usr/bin/winetricks 2>/dev/null \
+                 | grep -q 'winetricks' ); then
+            ok "winetricks present (Wine compatibility layer)"
+        else
+            warn "winetricks missing from the squashfs"
+        fi
+        if ( set +o pipefail
+             unsquashfs -q -cat "$WORK/verify.squashfs" \
+                 usr/local/bin/dct-office-install 2>/dev/null \
+                 | grep -q 'dct-office-install' ); then
+            ok "Office installer helper present"
+        else
+            warn "Office installer helper missing"
+        fi
+    fi
     rm -f "$WORK/verify.squashfs"
 else
     warn "could not extract squashfs for inspection"
@@ -950,13 +1060,18 @@ sha256sum "$OUTISO" | tee "$OUTISO.sha256"
 [ -s "$OUTISO.sha256" ] || die "could not write checksum"
 
 say "done"
+if [ "$OFFICE_PKGS" -eq 1 ]; then
+    usb_hint="16 GB+ (includes the office stack)"
+else
+    usb_hint="8 GB+"
+fi
 cat <<EOF
 
   $OUTISO
   $(du -h "$OUTISO" | cut -f1)
 
-  Write it to a USB stick (8 GB+). Replace /dev/sdX with the STICK, not a disk
-  you care about — 'lsblk' first, and check the size:
+  Write it to a USB stick ($usb_hint). Replace /dev/sdX with the STICK, not a
+  disk you care about — 'lsblk' first, and check the size:
 
     sudo dd if=$OUTISO of=/dev/sdX bs=4M status=progress oflag=sync
     sync

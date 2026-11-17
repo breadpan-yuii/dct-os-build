@@ -1,0 +1,101 @@
+#!/bin/sh
+# ---------------------------------------------------------------------------
+# dct-office-install — install the college's *licensed* Microsoft Office into
+# a dedicated Wine prefix.
+#
+# This tool deliberately ships no Microsoft binaries and no product keys.
+# Microsoft Office is proprietary and is not redistributable, so the ISO only
+# carries the compatibility layer (Wine + winetricks + prerequisites). Supply
+# the official Office media the college owns and is licensed to deploy.
+#
+# Version choice: Office 2016 (Volume License, MSI-based) is the newest release
+# that Wine runs reliably. Office 2019/2021/365 are Click-to-Run and do not
+# work under Wine.
+#
+#   dct-office-install /path/to/office2016.iso
+#   dct-office-install /path/to/office2016/setup.exe
+#   dct-office-install                 # uses /opt/dct-office-media if present
+# ---------------------------------------------------------------------------
+set -eu
+
+PREFIX="${WINEPREFIX:-$HOME/.wine-office}"
+MEDIA_DIR=/opt/dct-office-media
+
+usage() {
+    cat <<EOF
+Usage: dct-office-install [PATH]
+
+  PATH   Office 2016 setup.exe, or an ISO/directory that contains it.
+         With no PATH, $MEDIA_DIR is used if it exists.
+
+Target: 64-bit Office 2016 (Volume License). 32-bit Office needs a 32-bit
+Wine prefix (wine32 / i386 multiarch), which this image does not ship.
+
+This tool does not include Microsoft Office. Use media the college owns and
+is licensed to deploy on its own machines.
+EOF
+}
+
+case "${1:-}" in
+    -h|--help) usage; exit 0 ;;
+esac
+
+command -v wine >/dev/null 2>&1       || { echo "wine is not installed" >&2; exit 1; }
+command -v winetricks >/dev/null 2>&1 || { echo "winetricks is not installed" >&2; exit 1; }
+
+src="${1:-$MEDIA_DIR}"
+[ -e "$src" ] || {
+    echo "No Office media at '$src'." >&2
+    echo "Pass the path to setup.exe or the Office ISO." >&2
+    usage >&2
+    exit 2
+}
+
+# A given ISO is mounted read-only for the duration of the install.
+mnt=""
+cleanup() {
+    if [ -n "$mnt" ]; then
+        umount "$mnt" 2>/dev/null || true
+        rmdir "$mnt" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT INT TERM
+
+if [ -f "$src" ]; then
+    case "$src" in
+        *.iso|*.ISO)
+            mnt="$(mktemp -d)"
+            mount -o loop,ro "$src" "$mnt" || { echo "could not mount $src" >&2; exit 1; }
+            src="$mnt"
+            ;;
+    esac
+fi
+
+setup=""
+for c in "$src/setup.exe" "$src/Setup.exe" \
+         "$src"/*/setup.exe "$src"/*/Setup.exe; do
+    [ -f "$c" ] && { setup="$c"; break; }
+done
+[ -n "$setup" ] || { echo "could not find setup.exe under $src" >&2; exit 1; }
+
+echo "Wine prefix: $PREFIX"
+export WINEPREFIX="$PREFIX"
+export WINEARCH=win64
+
+# The prerequisites that make Office 2016 setup complete under Wine instead of
+# crashing. This downloads from Microsoft's redistributable endpoints via
+# winetricks; it does not download Office itself.
+echo "Installing Wine prerequisites (corefonts, msxml6, riched20, gdiplus)..."
+winetricks -q corefonts msxml6 riched20 gdiplus
+
+echo "Running $setup"
+( cd "$(dirname "$setup")" && wine "$(basename "$setup")" )
+
+cat <<EOF
+
+If setup finished, launch Word/Excel from the menu, or:
+  WINEPREFIX=$PREFIX wine "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE"
+
+The prefix lives in $PREFIX. Remove it to start over:
+  rm -rf "$PREFIX"
+EOF
