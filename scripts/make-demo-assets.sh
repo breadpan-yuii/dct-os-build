@@ -194,10 +194,54 @@ EOF
     } > "$1"
 }
 
+# ---------------------------------------------------------------------------
+# 3. Calamares welcome image — 1200×800. Calamares draws this beside the
+#    welcome text; branding.desc references it as productWelcome.
+# ---------------------------------------------------------------------------
+calamares_welcome() {   # $1=out.svg
+    # The placeholder lockup is square, so give it a narrower slot than the
+    # real (wide) lockup or it would overflow the 800 px canvas.
+    local w=720
+    [ "$HAVE_LOCKUP" -eq 1 ] || w=360
+    local h
+    h="$(awk -v w="$w" -v r="$LOCKUP_RATIO" 'BEGIN{printf "%.0f", w/r}')"
+    local x=$(( (1200 - w) / 2 ))
+    local y=$(( (470 - h) / 2 ))
+
+    {
+        svg_head 1200 800
+        cat <<EOF
+  <defs>
+    <linearGradient id="w" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="$PURPLE_DEEP"/>
+      <stop offset="100%" stop-color="$GRAY_DARK"/>
+    </linearGradient>
+    <radialGradient id="wg" cx="0.5" cy="0.35" r="0.75">
+      <stop offset="0%" stop-color="$PURPLE_LIGHT" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="$PURPLE_LIGHT" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#w)"/>
+  <rect width="1200" height="800" fill="url(#wg)"/>
+EOF
+        lockup_svg "$w" "$x" "$y" 1
+        cat <<EOF
+  <rect x="540" y="500" width="120" height="4" fill="$PURPLE_LIGHT"/>
+  <text x="600" y="566" font-family="$FONT" font-size="42" font-weight="bold"
+        fill="$WHITE" text-anchor="middle">$DCT_NAME</text>
+  <text x="600" y="610" font-family="$FONT" font-size="22" fill="$MUTED"
+        text-anchor="middle">$DCT_VENDOR</text>
+  <text x="600" y="716" font-family="$FONT" font-size="16" fill="$MUTED"
+        text-anchor="middle" letter-spacing="2">$DCT_PRETTY_NAME  ·  $DCT_CODENAME</text>
+</svg>
+EOF
+    } > "$1"
+}
+
 say "deriving assets"
 
 # ---------------------------------------------------------------------------
-# 3. Render
+# 4. Render
 # ---------------------------------------------------------------------------
 wallpaper day  "$WORK/wall-day.svg";  rsvg-convert -w 3840 -h 2160 -o "$OUT/dct-default.png"      "$WORK/wall-day.svg"
 wallpaper dark "$WORK/wall-dark.svg"; rsvg-convert -w 3840 -h 2160 -o "$OUT/dct-default-dark.png" "$WORK/wall-dark.svg"
@@ -208,6 +252,9 @@ rsvg-convert -w 3840 -h 2160 -o "$OUT/dct-greeter.png" "$WORK/wall-greeter.svg"
 
 grub_background "$WORK/grub-bg.svg"
 rsvg-convert -w 1920 -h 1080 -o "$OUT/background.png" "$WORK/grub-bg.svg"
+
+calamares_welcome "$WORK/calamares-welcome.svg"
+rsvg-convert -w 1200 -h 800 -o "$OUT/welcome.png" "$WORK/calamares-welcome.svg"
 
 # Greeter icon — the seal, centred on a transparent 256². slick-greeter scales
 # by height, so the extra pixels are free sharpness on HiDPI panels.

@@ -505,6 +505,14 @@ branding_calamares() {
     if [ -f "$PAYLOAD/assets/dct-logo.png" ]; then
         install_file "$PAYLOAD/assets/dct-logo.png" \
                      /etc/calamares/branding/dct/logo.png
+    else
+        warn "no payload/assets/dct-logo.png — installer logo will be blank"
+    fi
+    if [ -f "$PAYLOAD/assets/welcome.png" ]; then
+        install_file "$PAYLOAD/assets/welcome.png" \
+                     /etc/calamares/branding/dct/welcome.png
+    else
+        warn "no payload/assets/welcome.png — installer welcome image will be blank"
     fi
     ok "installer branding installed (settings.conf sets branding: dct)"
 }

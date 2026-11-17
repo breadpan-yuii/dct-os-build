@@ -21,6 +21,7 @@ Drop files here before running `scripts/apply-branding.sh`. Names are load-beari
 | `dct-default-dark.png` | `/usr/share/backgrounds/dct/` | 3840×2160, dark |
 | `dct-lock.png` | `/usr/share/backgrounds/dct/` | 3840×2160, lock screen |
 | `dct-greeter.png` | `/usr/share/backgrounds/dct/` | 3840×2160, **login screen** — must read purple + gray |
+| `welcome.png` | `/etc/calamares/branding/dct/welcome.png` | 1200×800, Calamares welcome page |
 | `progress_bg.png` / `progress_fg.png` | plymouth theme dir | 300×8, optional |
 
 ## Rules

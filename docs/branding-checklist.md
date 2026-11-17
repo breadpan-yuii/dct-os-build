@@ -86,7 +86,16 @@ and broke on every Yaru release.
 | Calamares branding | `/etc/calamares/branding/dct/` |
 | Product name/URLs | `branding.desc` — rendered from `payload/branding/tokens.env` |
 | Colours | `stylesheet.qss` + `branding.desc` — rendered from `tokens.env` |
+| Logo / welcome image | `logo.png` + `welcome.png` (1200×800), installed from `payload/assets/` |
 | Slideshow | not shipped — add later, a broken `show.qml` crashes the installer |
+
+`verify-branding.sh` checks that every image named in the `images:` block of
+`branding.desc` actually exists — a missing file is not fatal to the install,
+but it leaves a broken picture on the welcome page.
+
+Note: the shipped live ISO uses Canonical's `ubuntu-desktop-bootstrap` snap,
+not Calamares. The Calamares path is for the `live-build` pipeline; its
+branding is installed only when `/etc/calamares` exists.
 
 ## Phase F — Classroom operations (✍️)
 

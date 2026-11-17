@@ -388,6 +388,23 @@ else
     w "no installer brand script (fine if this system has no desktop installer)"
 fi
 
+# Calamares names its images by filename in branding.desc. A missing file does
+# not stop the install, but it renders a broken picture on the welcome page —
+# exactly the sort of thing nobody notices until the demo. Check every name.
+CD="$T/etc/calamares/branding/dct/branding.desc"
+if [ -r "$CD" ]; then
+    imgs="$(awk '/^images:/{f=1;next} f && /^[^[:space:]]/{f=0} f' "$CD" \
+            | sed -n 's/.*"\([^"]*\)".*/\1/p' | sort -u)"
+    if [ -n "$imgs" ]; then
+        missing=""
+        for img in $imgs; do
+            [ -f "$T/etc/calamares/branding/dct/$img" ] || missing="$missing $img"
+        done
+        [ -z "$missing" ] && p "calamares images present ($(echo $imgs | wc -w) files)" \
+            || f "calamares branding.desc references missing image(s):$missing"
+    fi
+fi
+
 echo "== package layer =="
 if command -v dpkg-query >/dev/null 2>&1 && [ "$ROOT" = "/" ]; then
     for pkg in dct-os-defaults dct-os-desktop; do
