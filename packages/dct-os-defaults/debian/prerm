@@ -1,14 +1,24 @@
 #!/bin/sh
 set -e
 
-# Only undo the diversion when the package is actually going away, not on
-# upgrade. $1 is the dpkg action.
+# ---------------------------------------------------------------------------
+# Undo the diversions that apply-branding.sh registered, and only those. The
+# file list and the divert suffix must match SHIELDED / .dct-orig in
+# scripts/apply-branding.sh exactly; a different name here would leave a
+# diversion behind that keeps redirecting base-files writes after purge.
+#
+# $1 is the dpkg action. Only undo on a real removal, never on upgrade.
+# ---------------------------------------------------------------------------
 case "$1" in
     remove|purge|abort-install|abort-upgrade|disappear)
-        if dpkg-divert --list /etc/os-release | grep -q 'dct-os-defaults'; then
-            dpkg-divert --package dct-os-defaults --divert /etc/os-release.dctorig \
-                        --rename --remove /etc/os-release
-        fi
+        for f in /etc/os-release /usr/lib/os-release /etc/lsb-release \
+                 /etc/issue /etc/issue.net; do
+            if dpkg-divert --list "$f" 2>/dev/null | grep -q 'dct-os-defaults'; then
+                dpkg-divert --package dct-os-defaults \
+                            --divert "${f}.dct-orig" \
+                            --no-rename --remove "$f" || true
+            fi
+        done
         ;;
 esac
 

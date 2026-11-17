@@ -101,13 +101,19 @@ install_file() {                       # src dst [mode]
 # keeps the name in one file instead of drifting across os-release, issue,
 # motd and lsb-release.
 render_file() {                        # src dst
-    local src="$1" dst="$2"
+    local src="$1" dst="$2" tmp
     [ -e "$src" ] || { warn "missing source $src — skipped"; return 0; }
     if [ "$DRY" -eq 1 ]; then
         printf '     + render %s -> %s\n' "$src" "$dst"
         return 0
     fi
     install -d -m 0755 "$(dirname "$T$dst")"
+    # Render to a fresh file and rename it over the destination. Ubuntu
+    # Cinnamon ships /etc/os-release as a symlink to ../usr/lib/os-release;
+    # a plain '> $dst' would write through that link, and the
+    # /usr/lib/os-release -> ../../etc/os-release symlink created below would
+    # then close a loop ("Too many levels of symbolic links").
+    tmp="$(mktemp "$T$dst.dct-new.XXXXXX")" || die "mktemp failed for $dst"
     sed -e "s|@DCT_NAME@|$DCT_NAME|g" \
         -e "s|@DCT_PRETTY_NAME@|$DCT_PRETTY_NAME|g" \
         -e "s|@DCT_VERSION@|$DCT_VERSION|g" \
@@ -115,8 +121,9 @@ render_file() {                        # src dst
         -e "s|@DCT_VENDOR@|$DCT_VENDOR|g" \
         -e "s|@DCT_HOME_URL@|$DCT_HOME_URL|g" \
         -e "s|@DCT_SUPPORT_URL@|$DCT_SUPPORT_URL|g" \
-        "$src" > "$T$dst"
-    chmod 0644 "$T$dst"
+        "$src" > "$tmp"
+    chmod 0644 "$tmp"
+    mv -f -- "$tmp" "$T$dst"
 }
 
 # ---------------------------------------------------------------------------

@@ -113,10 +113,11 @@ out loud during the demo, it is a better answer than any screenshot.
 This is the one that ends the conversation: a USB stick you hand to a panel
 member, who boots it on a machine that has never seen this project.
 
-It is a **remaster** of the official Ubuntu 24.04 ISO, not a from-scratch build:
+It is a **remaster** of the official Ubuntu Cinnamon 24.04 ISO, not a
+from-scratch build:
 
 ```
-official Ubuntu 24.04 ISO (checksum-verified)
+official Ubuntu Cinnamon 24.04 ISO (checksum-verified)
   -> detect the casper layer chain
   -> extract minimal / minimal.standard / minimal.standard.live
   -> overlay-mount the union (live on top)
@@ -128,8 +129,8 @@ official Ubuntu 24.04 ISO (checksum-verified)
   -> dist/Dominican-OS-1.0-live-amd64.iso
 ```
 
-Ubuntu 24.04.5.1 does not ship a single `filesystem.squashfs` any more; it ships
-a layered casper filesystem. The script handles that layout, which is why the
+Ubuntu Cinnamon 24.04.5 ships the same layered casper filesystem as Ubuntu — no
+single `filesystem.squashfs`. The script handles that layout, which is why the
 steps above look different from older remaster recipes.
 
 Why this and not penguins-eggs: it does not need a running branded machine, it
@@ -210,8 +211,8 @@ build and not some leftover image.
 
 ### Legal guardrail
 
-The base image must be the **official Ubuntu 24.04 ISO**, checksum-verified by
-the build script against Canonical's published sum. Never remaster a Zorin ISO,
+The base image must be the **official Ubuntu Cinnamon 24.04 ISO**,
+checksum-verified by the build script against Canonical's published sum. Never remaster a Zorin ISO,
 a Windows image, or a PC's installed system: the output would carry artwork and
 packages that `docs/licensing.md` says you cannot redistribute.
 

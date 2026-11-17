@@ -80,7 +80,7 @@ copies the debs *after* `auto/config` and not before.
 ## Demo path (this week): remaster, not live-build
 
 The bootable artefact for the proposal defence is produced by **remastering the
-official Ubuntu 24.04.5.1 ISO**, not by `lb build`. `scripts/build-live-iso.sh`
+official Ubuntu Cinnamon 24.04.5 ISO**, not by `lb build`. `scripts/build-live-iso.sh`
 does this end to end and needs only `xorriso`, `squashfs-tools` and root — it
 runs from this Arch host, needs no Docker, and leaves Canonical's signed
 shim/GRUB/kernel chain untouched, so the result still boots with Secure Boot on.
@@ -111,7 +111,8 @@ The pipeline, in order:
 
 ### What the layered casper layout changes
 
-Ubuntu 24.04.5.1 no longer ships a single `filesystem.squashfs`. `/casper` holds
+Ubuntu Cinnamon 24.04.5 ships the same layered layout as Ubuntu: it has no
+single `filesystem.squashfs`. `/casper` holds
 `minimal.squashfs`, `minimal.standard.squashfs`, `minimal.standard.live.squashfs`
 plus per-language layers, and the initrd's `/etc/casper.conf` sets
 `LAYERFS_PATH=minimal.standard.live.squashfs`. casper walks that name down one
