@@ -59,7 +59,7 @@ fi
 [ -n "$ISO" ] && [ -f "$ISO" ] || { echo "no ISO found (build one, or pass a path)" >&2; exit 2; }
 ISO="$(cd "$(dirname "$ISO")" && pwd)/$(basename "$ISO")"
 
-# Hardware acceleration. Without KVM a full GNOME live session under TCG can
+# Hardware acceleration. Without KVM a full live desktop session under TCG can
 # take 20+ minutes and may never settle, so prefer KVM whenever it is usable.
 QEMU_ACCEL=()
 if [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
@@ -164,8 +164,8 @@ if [ "$DO_STRUCT" -eq 1 ]; then
         grep -q 'ignore_uuid' "$TMP/grub.cfg" \
             && p "grub.cfg carries ignore_uuid" \
             || w "grub.cfg has no ignore_uuid"
-        grep -q 'DCT OS' "$TMP/grub.cfg" \
-            && p "grub.cfg shows the DCT OS label" \
+        grep -q 'Dominican OS' "$TMP/grub.cfg" \
+            && p "grub.cfg shows the Dominican OS label" \
             || w "grub.cfg still shows the upstream label"
     else
         w "no /boot/grub/grub.cfg"

@@ -12,10 +12,10 @@ Depends: ${misc:Depends},
          libglib2.0-bin,
          grub2-common,
          plymouth
-Description: DCT OS identity, theme and desktop defaults
- Ships the DCT OS branding payload and applies it: /etc/os-release identity,
- GRUB theme, Plymouth splash, GLib schema overrides, Firefox policy, and the
- default user skeleton.
+Description: Dominican OS identity, theme and desktop defaults
+ Ships the Dominican OS branding payload and applies it: /etc/os-release
+ identity, GRUB theme, Plymouth splash, GLib schema overrides, Firefox policy,
+ and the default user skeleton.
  .
  Branding is applied by /usr/share/dct-os/apply-branding.sh, which is
  idempotent and can be re-run at any time:
@@ -23,4 +23,4 @@ Description: DCT OS identity, theme and desktop defaults
    sudo /usr/share/dct-os/apply-branding.sh
  .
  This package diverts /etc/os-release (see postinst) because base-files owns
- that path and would otherwise overwrite the DCT OS identity on upgrade.
+ that path and would otherwise overwrite the Dominican OS identity on upgrade.

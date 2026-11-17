@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
-# build-pkgs.sh — build the two DCT OS .deb packages into dist/
+# build-pkgs.sh — build the two Dominican OS .deb packages into dist/
 #
 # Runs dpkg-buildpackage inside a throwaway ubuntu:24.04 container so you do
 # not need an Ubuntu host and cannot pollute your system with build-deps.

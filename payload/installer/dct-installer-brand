@@ -19,6 +19,16 @@ set -eu
 SNAP_NAME=ubuntu-desktop-bootstrap
 ASSETS_REL=bin/data/flutter_assets/packages/ubuntu_provision/assets
 
+# Product name, single-sourced from the installed payload. A caller may set
+# DCT_NAME explicitly (the rootless test does, so it never depends on the
+# host having /usr/share/dct-os).
+TOKENS=${DCT_TOKENS:-/usr/share/dct-os/payload/branding/tokens.env}
+if [ -z "${DCT_NAME:-}" ] && [ -r "$TOKENS" ]; then
+    # shellcheck source=/dev/null
+    . "$TOKENS"
+fi
+DCT_NAME=${DCT_NAME:-Dominican OS}
+
 # The four paths below are overridable only so scripts/test-installer-brand.sh
 # can exercise this file without root. On a real system the defaults apply.
 SNAP_ROOT=${DCT_SNAP_ROOT:-/snap}
@@ -36,9 +46,9 @@ log() { printf 'dct-installer-brand: %s\n' "$*"; }
 # the installer must be started by hand from the app grid).
 if [ -f "$DESKTOP" ]; then
     sed -i -e '/^NoDisplay=/d' \
-           -e 's/^Name=.*/Name=Install DCT OS/' \
+           -e "s/^Name=.*/Name=Install $DCT_NAME/" \
            -e 's/^Icon=.*/Icon=dct-os/' "$DESKTOP"
-    log "launcher -> Install DCT OS (icon dct-os)"
+    log "launcher -> Install $DCT_NAME (icon dct-os)"
 fi
 
 # Nothing to brand on a system that does not have the installer snap.

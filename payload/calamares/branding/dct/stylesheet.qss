@@ -1,4 +1,4 @@
-/* DCT OS — Calamares stylesheet.
+/* Dominican OS — Calamares stylesheet.
    Install to /etc/calamares/branding/dct/stylesheet.qss
    Colours mirror payload/branding/tokens.env.
    Qt stylesheets are limited; keep selectors defensive — an unknown widget

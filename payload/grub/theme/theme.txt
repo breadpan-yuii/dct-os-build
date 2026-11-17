@@ -1,4 +1,4 @@
-# GRUB theme — DCT OS
+# GRUB theme — Dominican OS
 # Place at /boot/grub/themes/dct/theme.txt, with background.png beside it.
 # GRUB themes are loaded from disk at runtime, so this works WITH Secure Boot on.
 

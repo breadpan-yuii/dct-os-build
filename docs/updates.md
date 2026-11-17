@@ -1,6 +1,6 @@
 # Updates — where they come from and why branding survives them
 
-Short answer, because this comes up in every panel: **DCT OS is not based on
+Short answer, because this comes up in every panel: **Dominican OS is not based on
 Zorin OS, so it receives no Zorin updates.** It is Ubuntu 24.04 LTS underneath,
 and it receives Canonical's updates. That is intentional — Zorin's terms do not
 permit rebranded derivatives, and inheriting their repositories would drag their
@@ -88,13 +88,13 @@ What this does: dpkg's database now says "any package that writes
 `/etc/os-release` writes `/etc/os-release.dct-orig` instead". `base-files`
 continues to upgrade normally — it is not held, not pinned, and still receives
 security fixes — but its copy of the file lands beside ours instead of on top of
-it. `/etc/os-release` keeps saying DCT OS.
+it. `/etc/os-release` keeps saying Dominican OS.
 
 Inspect it:
 
 ```bash
 dpkg-divert --list | grep dct
-head -3 /etc/os-release          # DCT OS 1.0 (tarlac)
+head -3 /etc/os-release          # Dominican OS 1.0 (tarlac)
 head -3 /etc/os-release.dct-orig # what base-files last delivered
 ```
 
@@ -140,7 +140,7 @@ off-brand, run the script. It converges.
 ## 4. What upgrades do *not* touch, and why
 
 - **GRUB menu theme.** `/etc/default/grub` carries
-  `GRUB_THEME="/boot/grub/themes/dct/theme.txt"` and `GRUB_DISTRIBUTOR="DCT OS"`.
+  `GRUB_THEME="/boot/grub/themes/dct/theme.txt"` and `GRUB_DISTRIBUTOR="Dominican OS"`.
   A kernel update runs `update-grub`, which reads that file and regenerates
   `grub.cfg` *with our theme*. The theme directory itself is not package-owned.
 - **Plymouth splash.** The theme directory is ours, and
@@ -180,7 +180,7 @@ On a running system, the same check by hand:
 
 ```bash
 sudo apt install --reinstall -y base-files
-head -3 /etc/os-release     # must still be DCT OS
+head -3 /etc/os-release     # must still be Dominican OS
 sudo dpkg-divert --list | grep dct
 ```
 

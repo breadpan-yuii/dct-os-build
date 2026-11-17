@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
-# apply-branding.sh — turn a stock Ubuntu 24.04 install into DCT OS.
+# apply-branding.sh — turn a stock Ubuntu 24.04 install into Dominican OS.
 #
 # This is the fast iteration loop. Run it on a VM, look at the result, change
 # something under payload/, run it again. It is idempotent: running it twice
@@ -96,6 +96,29 @@ install_file() {                       # src dst [mode]
     run install -D -m "$mode" "$src" "$T$dst"
 }
 
+# Install a file, substituting the identity tokens from tokens.env. The
+# payload templates are the only place the product name is spelled out; this
+# keeps the name in one file instead of drifting across os-release, issue,
+# motd and lsb-release.
+render_file() {                        # src dst
+    local src="$1" dst="$2"
+    [ -e "$src" ] || { warn "missing source $src — skipped"; return 0; }
+    if [ "$DRY" -eq 1 ]; then
+        printf '     + render %s -> %s\n' "$src" "$dst"
+        return 0
+    fi
+    install -d -m 0755 "$(dirname "$T$dst")"
+    sed -e "s|@DCT_NAME@|$DCT_NAME|g" \
+        -e "s|@DCT_PRETTY_NAME@|$DCT_PRETTY_NAME|g" \
+        -e "s|@DCT_VERSION@|$DCT_VERSION|g" \
+        -e "s|@DCT_CODENAME@|$DCT_CODENAME|g" \
+        -e "s|@DCT_VENDOR@|$DCT_VENDOR|g" \
+        -e "s|@DCT_HOME_URL@|$DCT_HOME_URL|g" \
+        -e "s|@DCT_SUPPORT_URL@|$DCT_SUPPORT_URL|g" \
+        "$src" > "$T$dst"
+    chmod 0644 "$T$dst"
+}
+
 # ---------------------------------------------------------------------------
 # 0. Update shield
 #
@@ -176,11 +199,11 @@ branding_update_shield() {
 # ---------------------------------------------------------------------------
 branding_identity() {
     say "identity"
-    install_file "$PAYLOAD/identity/os-release"   /etc/os-release
-    install_file "$PAYLOAD/identity/lsb-release"  /etc/lsb-release
-    install_file "$PAYLOAD/identity/issue"        /etc/issue
-    install_file "$PAYLOAD/identity/issue.net"    /etc/issue.net
-    install_file "$PAYLOAD/identity/motd"         /etc/motd
+    render_file "$PAYLOAD/identity/os-release"   /etc/os-release
+    render_file "$PAYLOAD/identity/lsb-release"  /etc/lsb-release
+    render_file "$PAYLOAD/identity/issue"        /etc/issue
+    render_file "$PAYLOAD/identity/issue.net"    /etc/issue.net
+    render_file "$PAYLOAD/identity/motd"         /etc/motd
 
     # /usr/lib/os-release is the canonical copy on modern systems; keep both
     # pointing at one file so they cannot drift.
@@ -460,7 +483,7 @@ in_target() {
 
 # ---------------------------------------------------------------------------
 main() {
-    say "DCT OS $DCT_VERSION — applying branding to ${ROOT}"
+    say "$DCT_NAME $DCT_VERSION — applying branding to ${ROOT}"
     [ "$DRY" -eq 1 ] && warn "DRY RUN — nothing will be written"
 
     branding_update_shield
@@ -479,7 +502,7 @@ main() {
 
   Check it:
     cat /etc/os-release
-    gsettings get org.gnome.desktop.background picture-uri
+    gsettings get org.cinnamon.desktop.background picture-uri
     ./scripts/verify-branding.sh
 
   Then bake a bootable image:  sudo ./scripts/build-live-iso.sh --fast

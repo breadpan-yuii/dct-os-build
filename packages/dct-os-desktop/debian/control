@@ -17,23 +17,21 @@ Depends: dct-os-defaults (>= 1.0),
          libreoffice-impress,
          libreoffice-gnome,
          firefox,
-         nautilus,
+         nemo,
          evince,
          timeshift,
          epoptes-client
 Recommends: onlyoffice-desktopeditors,
             winetricks,
-            calamares,
-            gnome-shell-extension-appindicator
-# NOTE: GNOME extension package names drift between Ubuntu releases. Verify with
-#   apt-cache search gnome-shell-extension
-# on 24.04 before promoting any of these from Recommends to Depends. A wrong
-# name in Depends makes the whole metapackage uninstallable.
+            calamares
+# NOTE: the desktop itself (cinnamon, lightdm, slick-greeter) is supplied by
+# the Ubuntu Cinnamon 24.04 base image, so it is deliberately not a dependency
+# here — pulling it in on a plain Ubuntu base would fight gdm3/gnome-shell.
 Suggests: winehq-stable
-Description: DCT OS desktop environment
- Meta package that turns an Ubuntu 24.04 LTS base into the standard DCT OS
- classroom desktop: the college's application set, icon/theme baseline and
- classroom management tooling, in one installable unit.
+Description: Dominican OS desktop environment
+ Meta package that turns an Ubuntu Cinnamon 24.04 LTS base into the standard
+ Dominican OS classroom desktop: the college's application set, icon/theme
+ baseline and classroom management tooling, in one installable unit.
  .
  This is an internally deployed institutional image, not a public
  distribution.

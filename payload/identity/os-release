@@ -1,14 +1,14 @@
-PRETTY_NAME="DCT OS 1.0"
-NAME="DCT OS"
-VERSION_ID="1.0"
-VERSION="1.0 (tarlac)"
-VERSION_CODENAME=tarlac
+PRETTY_NAME="@DCT_PRETTY_NAME@"
+NAME="@DCT_NAME@"
+VERSION_ID="@DCT_VERSION@"
+VERSION="@DCT_VERSION@ (@DCT_CODENAME@)"
+VERSION_CODENAME=@DCT_CODENAME@
 ID=dctos
 ID_LIKE=ubuntu debian
-HOME_URL="https://dct.edu.ph"
-SUPPORT_URL="https://dct.edu.ph/helpdesk"
-BUG_REPORT_URL="https://dct.edu.ph/helpdesk"
-PRIVACY_POLICY_URL="https://dct.edu.ph/privacy"
+HOME_URL="@DCT_HOME_URL@"
+SUPPORT_URL="@DCT_SUPPORT_URL@"
+BUG_REPORT_URL="@DCT_SUPPORT_URL@"
+PRIVACY_POLICY_URL="@DCT_HOME_URL@/privacy"
 LOGO=dct-logo
 
 # IMPORTANT: keep these two. apt, software-properties and snapd read them.

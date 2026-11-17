@@ -6,7 +6,7 @@ VERSION := $(shell sed -n 's/^DCT_VERSION=//p' payload/branding/tokens.env)
 
 .PHONY: help
 help: ## show this help
-	@echo "DCT OS build — version $(VERSION)"
+	@echo "Dominican OS build — version $(VERSION)"
 	@echo
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) \
 	  | sort \
@@ -64,7 +64,7 @@ iso: deps pkgs ## assemble the ISO (slow, reproducible)
 	./scripts/build-iso.sh
 
 .PHONY: live-iso
-live-iso: ## bootable live ISO by remastering Ubuntu 24.04 (needs sudo + xorriso)
+live-iso: ## bootable live ISO by remastering Ubuntu Cinnamon 24.04 (needs sudo + xorriso)
 	sudo ./scripts/build-live-iso.sh
 
 .PHONY: live-iso-fast

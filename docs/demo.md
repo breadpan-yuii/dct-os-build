@@ -11,7 +11,7 @@ caught presenting a render as a live system is the only way this demo fails.
 |---|---|---|---|---|
 | **0** | Design renders in `demo/mockups/` | nothing — already generated | done | "Design direction for the branded system." |
 | **1** | A real Ubuntu VM with branding applied | any VM software | ~1 hour | "The branding layer, running." |
-| **2** | A bootable DCT OS ISO | Tier 1 + `penguins-eggs` | ~half a day | "A DCT OS image that boots." |
+| **2** | A bootable Dominican OS ISO | Tier 1 + `penguins-eggs` | ~half a day | "A Dominican OS image that boots." |
 
 Tier 1 is the sweet spot. Tier 2 is the one that ends the conversation.
 
@@ -94,7 +94,7 @@ if you want it on screen. If you skip it, do not talk about it as installed.
 - [ ] Boot splash (record video — a still does not prove it animates)
 - [ ] Greeter
 - [ ] Desktop with the wallpaper
-- [ ] `cat /etc/os-release` — shows *DCT OS 1.0 (tarlac)*
+- [ ] `cat /etc/os-release` — shows *Dominican OS 1.0 (tarlac)*
 - [ ] `verify-branding.sh` output — zero failures, on screen
 
 Those five take ten minutes and replace every mockup in your deck with the real
@@ -125,7 +125,7 @@ official Ubuntu 24.04 ISO (checksum-verified)
   -> rebuild initrd, re-sync the medium UUID
   -> write the branded system into the base layer
   -> mksquashfs the layers, xorriso reassemble with the signed boot chain
-  -> dist/DCT-OS-1.0-live-amd64.iso
+  -> dist/Dominican-OS-1.0-live-amd64.iso
 ```
 
 Ubuntu 24.04.5.1 does not ship a single `filesystem.squashfs` any more; it ships
@@ -169,7 +169,7 @@ check and still fail on a real PC.
 
 ```bash
 lsblk                                     # find the stick, CHECK THE SIZE
-sudo dd if=dist/DCT-OS-1.0-live-amd64.iso of=/dev/sdX bs=4M status=progress oflag=sync
+sudo dd if=dist/Dominican-OS-1.0-live-amd64.iso of=/dev/sdX bs=4M status=progress oflag=sync
 sync
 ```
 
@@ -182,18 +182,18 @@ disk. Ventoy also works and is safer if you are nervous.
    F12 or F10), pick the USB device.
 2. On a Secure Boot machine, choose the UEFI entry. It boots — the shim is
    Canonical's, unmodified.
-3. Pick **Try DCT OS**. The DCT-branded live desktop appears. The Ubuntu
+3. Pick **Try Dominican OS**. The DCT-branded live desktop appears. The Ubuntu
    desktop-bootstrap installer is deliberately not auto-launched in this
    try-only demo image. **Nothing has been
    written to that PC's disk.**
 
 Success criteria — all five, or it is not a demo:
 
-- [ ] reaches the DCT OS boot menu
+- [ ] reaches the Dominican OS boot menu
 - [ ] splash appears with the DCT mark
 - [ ] reaches a live desktop, wallpaper and all
 - [ ] `cat /etc/dct-os-release` prints `BUILD_KIND="live-remaster"` and today's date
-- [ ] `head -3 /etc/os-release` says *DCT OS 1.0 (tarlac)*
+- [ ] `head -3 /etc/os-release` says *Dominican OS 1.0 (tarlac)*
 
 That fourth check is the one to memorise: it proves the machine booted *this*
 build and not some leftover image.

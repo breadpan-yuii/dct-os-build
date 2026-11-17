@@ -22,6 +22,16 @@ ROOT="${ROOT%/}"; [ -n "$ROOT" ] || ROOT="/"
 T="$ROOT"
 [ "$ROOT" = "/" ] && T=""    # avoid //etc/... paths when targeting the live root
 
+# Same identity tokens as the build; never spell the product name twice.
+TOKENS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/payload/branding/tokens.env"
+if [ -r "$TOKENS" ]; then
+    # shellcheck source=/dev/null
+    . "$TOKENS"
+else
+    echo "warning: $TOKENS not found — product-name checks will be skipped" >&2
+    DCT_NAME=""
+fi
+
 PASS=0; FAIL=0; WARN=0
 p() { printf '\033[1;32m PASS\033[0m %s\n' "$*"; PASS=$((PASS+1)); }
 f() { printf '\033[1;31m FAIL\033[0m %s\n' "$*"; FAIL=$((FAIL+1)); }
@@ -105,10 +115,11 @@ else
     fi
 fi
 
-if [ -r "$T/etc/default/grub" ] && grep -qE '^GRUB_DISTRIBUTOR="DCT OS"' "$T/etc/default/grub"; then
+if [ -r "$T/etc/default/grub" ] && [ -n "$DCT_NAME" ] \
+   && grep -qxF "GRUB_DISTRIBUTOR=\"$DCT_NAME\"" "$T/etc/default/grub"; then
     p "GRUB_DISTRIBUTOR set"
 else
-    w "GRUB_DISTRIBUTOR not set to DCT OS"
+    w "GRUB_DISTRIBUTOR not set to ${DCT_NAME:-the product name}"
 fi
 
 plymouth_ok=0
@@ -238,7 +249,8 @@ if exists "/usr/share/dct-os/dct-installer-brand"; then
         || f "no dct-os.svg icon — the installer launcher has no icon"
     launcher="$T/var/lib/snapd/desktop/applications/ubuntu-desktop-bootstrap_ubuntu-desktop-bootstrap.desktop"
     if [ -f "$launcher" ]; then
-        if grep -q '^Icon=dct-os' "$launcher" && grep -q '^Name=Install DCT OS' "$launcher"; then
+        if grep -q '^Icon=dct-os' "$launcher" \
+           && grep -qF "Name=Install $DCT_NAME" "$launcher"; then
             p "installer launcher branded (name + icon)"
         else
             f "installer launcher still says Ubuntu"

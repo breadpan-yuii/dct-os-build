@@ -1,4 +1,4 @@
-# Packages baked into the DCT OS live image.
+# Packages baked into the Dominican OS live image.
 # Keep this list short and let dct-os-desktop pull the rest — one place to edit.
 
 dct-os-desktop

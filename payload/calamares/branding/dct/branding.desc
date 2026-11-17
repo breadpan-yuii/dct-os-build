@@ -1,5 +1,5 @@
 ---
-# Calamares branding for DCT OS.
+# Calamares branding for Dominican OS.
 # Install to /etc/calamares/branding/dct/branding.desc
 # referenced from /etc/calamares/settings.conf via:  branding: dct
 #
@@ -10,13 +10,13 @@
 componentName: dct
 
 strings:
-    productName:         "DCT OS"
-    shortProductName:    "DCT OS"
+    productName:         "Dominican OS"
+    shortProductName:    "Dominican OS"
     version:             "1.0"
     shortVersion:        "1.0"
-    versionedName:       "DCT OS 1.0 (tarlac)"
-    shortVersionedName:  "DCT OS 1.0"
-    bootloaderEntryName: "DCT OS"
+    versionedName:       "Dominican OS 1.0 (tarlac)"
+    shortVersionedName:  "Dominican OS 1.0"
+    bootloaderEntryName: "Dominican OS"
     productUrl:          "https://dct.edu.ph"
     supportUrl:          "https://dct.edu.ph/helpdesk"
     releaseNotesUrl:     "https://dct.edu.ph/helpdesk"

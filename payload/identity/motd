@@ -1,9 +1,8 @@
 
-  Welcome to DCT OS 1.0 (tarlac) — Dominican College of Tarlac
+  Welcome to @DCT_PRETTY_NAME@ (@DCT_CODENAME@) — @DCT_VENDOR@
 
-  Helpdesk .... https://dct.edu.ph/helpdesk
+  Helpdesk .... @DCT_SUPPORT_URL@
   Updates ..... sudo apt update && sudo apt upgrade
-  Report a bug  https://dct.edu.ph/helpdesk
+  Report a bug  @DCT_SUPPORT_URL@
 
   This system is monitored. Use is subject to the DCT Acceptable Use Policy.
-

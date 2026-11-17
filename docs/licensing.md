@@ -1,11 +1,11 @@
-# Licensing — what you can and cannot put in DCT OS
+# Licensing — what you can and cannot put in Dominican OS
 
 Not legal advice. Enough to keep a school project out of trouble and to answer
 the questions an IT reviewer will ask.
 
 ## The one-line version
 
-**DCT OS is an internally deployed institutional image built on Ubuntu 24.04 LTS.**
+**Dominican OS is an internally deployed institutional image built on Ubuntu 24.04 LTS.**
 Say that in the proposal and most of this document becomes irrelevant. The
 problems only start if you call it a public distribution or derive it from
 Zorin's ISO.
@@ -26,7 +26,7 @@ per-package terms live in `/usr/share/doc/<pkg>/copyright`. So the open-source
 *components* inside Zorin are governed by their own licences — but Zorin's own
 artwork, themes and trademarks are not yours to reuse.
 
-**Therefore:** do not build DCT OS from a Zorin ISO. Build from Ubuntu 24.04 LTS
+**Therefore:** do not build Dominican OS from a Zorin ISO. Build from Ubuntu 24.04 LTS
 (the same base Zorin 18 uses) and create your own assets. If you want to reuse a
 specific Zorin component, read its licence in `/usr/share/doc/<pkg>/copyright`
 first, and prefer to reimplement.
@@ -50,7 +50,7 @@ And restricts:
 - using `Ubuntu`, `Kubuntu`, `Edubuntu` etc. in your name
 
 **Therefore:** internal deployment to DCT-owned machines is squarely permitted.
-Name it `DCT OS`, not `DCT Ubuntu`, and do not use the Ubuntu logo as your own.
+Name it `Dominican OS`, not `DCT Ubuntu`, and do not use the Ubuntu logo as your own.
 Keeping `ID_LIKE=ubuntu` and `UBUNTU_CODENAME=noble` in `/etc/os-release` is
 correct and necessary — that is metadata for apt, not branding.
 
@@ -142,7 +142,7 @@ communications/branding, and keep the letter in the project file. Add the file t
 
 Put this in the About screen and in the README:
 
-> DCT OS is built on Ubuntu 24.04 LTS. Not affiliated with Zorin OS or Canonical.
+> Dominican OS is built on Ubuntu 24.04 LTS. Not affiliated with Zorin OS or Canonical.
 > Ubuntu is a trademark of Canonical Ltd. Zorin OS is a trademark of Zorin OS
 > Technologies Ltd.
 

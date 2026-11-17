@@ -1,5 +1,5 @@
 [Unit]
-Description=DCT OS artwork for the Ubuntu desktop installer
+Description=Dominican OS artwork for the Ubuntu desktop installer
 Documentation=file:///usr/share/dct-os/README.md
 # The snap's own mount unit is named after its revision, so order against the
 # target that collects those mounts instead of a revision-specific unit. This

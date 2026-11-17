@@ -176,14 +176,14 @@ report() {
 
     case "$verdict" in
         ENABLED)
-            printf '  %s\n' "Nothing to fix. A DCT OS image with the signed chain boots here unchanged." ;;
+            printf '  %s\n' "Nothing to fix. A Dominican OS image with the signed chain boots here unchanged." ;;
         DISABLED)
-            printf '  %s\n' "A DCT OS image with the signed chain boots here unchanged. No firmware change needed." ;;
+            printf '  %s\n' "A Dominican OS image with the signed chain boots here unchanged. No firmware change needed." ;;
         DISABLED+SETUPMODE)
             printf '  %s\n' "The signed chain still boots here, but re-enrolling keys later needs the" \
                             "  original vendor keys. Back up PK/KEK/db before changing anything." ;;
         LEGACY)
-            printf '  %s\n' "A UEFI-only DCT OS image will NOT boot in this mode. Record it and" \
+            printf '  %s\n' "A UEFI-only Dominican OS image will NOT boot in this mode. Record it and" \
                             "  plan a firmware switch during deployment." ;;
         *)
             printf '  %s\n' "Inconclusive — re-run as root, or check firmware settings manually." ;;

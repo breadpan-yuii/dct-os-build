@@ -1,6 +1,6 @@
 [Plymouth Theme]
-Name=DCT OS
-Description=DCT OS boot splash
+Name=Dominican OS
+Description=Dominican OS boot splash
 ModuleName=script
 
 [script]

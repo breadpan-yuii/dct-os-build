@@ -1,21 +1,24 @@
-# DCT OS — build repo
+# Dominican OS — build repo
 
-An **internally deployed** Ubuntu 24.04 LTS image, rebranded for Dominican College
-of Tarlac. Not a public distribution. Not derived from Zorin OS assets.
+An **internally deployed** Ubuntu Cinnamon 24.04 LTS image, rebranded for
+Dominican College of Tarlac. Not a public distribution. Not derived from Zorin
+OS assets.
 
-> DCT OS is built on Ubuntu 24.04 LTS. Not affiliated with Zorin OS or Canonical.
+> Dominican OS is built on Ubuntu Cinnamon 24.04 LTS. Not affiliated with Zorin
+> OS or Canonical.
 
 ---
 
 ## The mental model: five layers
 
-DCT OS is not "a distro you write". It is **Ubuntu + a thin layer of packages**.
+Dominican OS is not "a distro you write". It is **Ubuntu + a thin layer of
+packages**.
 That is exactly how Zorin OS itself is built — its own image is 30-odd `zorin-*`
 packages sitting on top of an otherwise stock Ubuntu 24.04:
 
 | Layer | What it is | Who owns it | Lives here |
 |---|---|---|---|
-| 1 | Ubuntu 24.04 LTS base + signed boot chain | Canonical | not in this repo |
+| 1 | Ubuntu Cinnamon 24.04 LTS base + signed boot chain | Canonical | not in this repo |
 | 2 | `dct-os-desktop` — the app set (one metapackage) | you | `packages/dct-os-desktop/` |
 | 3 | `dct-os-defaults` — identity, theme, dconf, policies | you | `packages/dct-os-defaults/` + `payload/` |
 | 4 | ISO assembly (live-build) + Calamares branding | you | `live-build/`, `installer/` |
@@ -53,14 +56,15 @@ yourself editing an ISO by hand, stop — the change belongs in `payload/`.
 | **Boot test** | `./scripts/test-live-iso.sh` | Before writing any ISO to a stick |
 | **Reproducible** | `make pkgs && make iso` | Production, once branding is settled |
 
-The live ISO path remasters the official Ubuntu 24.04 ISO. Ubuntu 24.04.5.1
-ships a **layered** casper filesystem (`minimal.squashfs` →
-`minimal.standard.squashfs` → `minimal.standard.live.squashfs`) rather than a
-single `filesystem.squashfs`, so the script overlay-mounts the chain, brands the
-union, writes the branded system back into the base layer and reassembles the
-image with `xorriso`. It needs no container runtime, keeps Canonical's signed
-boot chain (so Secure Boot still works), and boots to a desktop **without
-installing anything**. The result lands in `dist/DCT-OS-1.0-live-amd64.iso`.
+The live ISO path remasters the official Ubuntu Cinnamon 24.04 ISO. Ubuntu
+Cinnamon 24.04.5 ships the same **layered** casper filesystem as Ubuntu
+(`minimal.squashfs` → `minimal.standard.squashfs` →
+`minimal.standard.live.squashfs`) rather than a single `filesystem.squashfs`, so
+the script overlay-mounts the chain, brands the union, writes the branded system
+back into the base layer and reassembles the image with `xorriso`. It needs no
+container runtime, keeps Canonical's signed boot chain (so Secure Boot still
+works), and boots to a desktop **without installing anything**. The result lands
+in `dist/Dominican-OS-1.0-live-amd64.iso`.
 
 `./scripts/test-live-iso.sh` then boots that image in QEMU — a serial-console
 boot that waits for a login prompt, plus a UEFI/GRUB boot with screenshots. Do
@@ -76,7 +80,7 @@ The live ISO path needs `xorriso` and `squashfs-tools` instead.
 
 ```
 payload/         branding files, placed at final system paths by the package
-packages/        the two .deb source trees that make this DCT OS
+packages/        the two .deb source trees that make up Dominican OS
 scripts/         apply, verify, audit, build, demo assets
 installer/       Calamares installer sequence (build-time only)
 live-build/      ISO assembly config

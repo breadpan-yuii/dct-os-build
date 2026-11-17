@@ -1,5 +1,5 @@
 ---
-# DCT OS — post-deployment fleet configuration.
+# Dominican OS — post-deployment fleet configuration.
 #
 # The ISO makes every machine identical. This makes them *managed*.
 #
@@ -7,7 +7,7 @@
 #
 # Run against the pilot lab before the wider rollout. Idempotent.
 
-- name: DCT OS classroom baseline
+- name: Dominican OS classroom baseline
   hosts: classroom
   become: true
   gather_facts: true
@@ -31,7 +31,7 @@
         name: "{{ dct_locale }}"
         state: present
 
-    - name: DCT OS packages are installed
+    - name: Dominican OS packages are installed
       ansible.builtin.apt:
         name:
           - dct-os-defaults
@@ -96,7 +96,7 @@
 
     - name: Report state
       ansible.builtin.debug:
-        msg: "{{ inventory_hostname }} — DCT OS {{ ansible_distribution_version }} baseline applied"
+        msg: "{{ inventory_hostname }} — Dominican OS {{ ansible_distribution_version }} baseline applied"
 
   handlers:
     - name: recompile dconf

@@ -1,5 +1,5 @@
 #!/bin/sh
-# live-build configuration for DCT OS. Executed by `lb build` via auto/config.
+# live-build configuration for Dominican OS. Executed by `lb build` via auto/config.
 # Re-running this resets config/ — that is expected live-build behaviour.
 set -e
 
@@ -23,7 +23,7 @@ lb config noauto \
     --memtest none \
     --apt-indices false \
     --bootappend-live "boot=live components quiet splash locale=en_PH.UTF-8 keyboard-layouts=us timezone=Asia/Manila" \
-    --iso-application "DCT OS" \
+    --iso-application "Dominican OS" \
     --iso-publisher "Dominican College of Tarlac; https://dct.edu.ph" \
     --iso-volume "DCTOS_1_0" \
     "$@"

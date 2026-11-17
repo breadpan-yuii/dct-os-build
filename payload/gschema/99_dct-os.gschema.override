@@ -1,6 +1,12 @@
-# DCT OS desktop defaults. Installed to /usr/share/glib-2.0/schemas/
+# Dominican OS desktop defaults. Installed to /usr/share/glib-2.0/schemas/
 # Compiled by dct-os-defaults.postinst via glib-compile-schemas.
-# Verify a value landed: gsettings get org.gnome.desktop.background picture-uri
+# Verify a value landed: gsettings get org.cinnamon.desktop.background picture-uri
+#
+# One file, two desktops. The image is built on Ubuntu Cinnamon, so the
+# org.cinnamon.* and x.dm.slick-greeter sections are the live ones. The
+# org.gnome.* sections are kept so the same payload still brands a GNOME
+# base; glib-compile-schemas ignores overrides for schemas or keys that are
+# not installed (verified: it warns, exits 0).
 
 [org.gnome.desktop.background]
 picture-uri='file:///usr/share/backgrounds/dct/dct-default.png'
@@ -44,3 +50,55 @@ remember-recent-files=false
 
 [org.gtk.Settings.FileChooser]
 sort-directories-first=true
+
+# ---------------------------------------------------------------------------
+# Cinnamon (Ubuntu Cinnamon 24.04 base)
+#
+# Only keys verified present in cinnamon-desktop 6.0.0 / cinnamon 6.0.4 are
+# listed here. Cinnamon has no picture-uri-dark, no color-scheme, no
+# document/monospace font keys and no screensaver picture-uri; it draws the
+# lock screen from the desktop background, so the lock wallpaper is not set
+# separately.
+# ---------------------------------------------------------------------------
+[org.cinnamon.desktop.background]
+picture-uri='file:///usr/share/backgrounds/dct/dct-default.png'
+picture-options='zoom'
+primary-color='#0B2545'
+secondary-color='#071A33'
+color-shading-type='solid'
+
+[org.cinnamon.desktop.interface]
+font-name='Inter 11'
+cursor-theme='dct-cursors'
+icon-theme='Papirus-Dark'
+gtk-theme='dct-gtk'
+clock-use-24h=false
+# Muffin composites unconditionally. Turning the effects off is the single
+# biggest win on a Pentium iGPU.
+enable-animations=false
+
+[org.cinnamon.desktop.session]
+idle-delay=uint32 600
+
+[org.cinnamon.desktop.sound]
+theme-name='dct'
+
+[org.cinnamon.desktop.privacy]
+remember-recent-files=false
+
+[org.cinnamon]
+favorite-apps=['firefox_firefox.desktop', 'onlyoffice-desktopeditors.desktop', 'nemo.desktop', 'org.gnome.gedit.desktop', 'org.gnome.Software.desktop']
+desktop-effects=false
+desktop-effects-on-dialogs=false
+desktop-effects-on-menus=false
+desktop-effects-workspace=false
+
+# LightDM greeter (slick-greeter reads the x.dm.slick-greeter schema; the
+# package ships no /etc/lightdm/slick-greeter.conf on 24.04).
+[x.dm.slick-greeter]
+logo='/usr/share/pixmaps/dct-logo.png'
+background='/usr/share/backgrounds/dct/dct-lock.png'
+background-color='#071A33'
+draw-user-backgrounds=false
+font-name='Inter 11'
+show-hostname=false

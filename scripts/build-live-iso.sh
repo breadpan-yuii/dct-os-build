@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
-# build-live-iso.sh — turn the official Ubuntu 24.04 ISO into a DCT OS live ISO.
+# build-live-iso.sh — turn the official Ubuntu Cinnamon 24.04 ISO into a
+# Dominican OS live ISO.
 #
 # A REMASTER, not a from-scratch build:
 #
@@ -40,14 +41,20 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 . "$REPO/payload/branding/tokens.env"
 
-ISO_URL="https://releases.ubuntu.com/24.04/ubuntu-24.04.5.1-desktop-amd64.iso"
-ISO_SHA256="4da4a0c9035da8e68a59a838674f403f0a54472c78a83b4fb7f78d03588f85a7"
-ISO_BYTES=6250332160          # 5.82 GiB, disk-space estimate only
-VOLID="DCT OS 1.0"
+# Ubuntu Cinnamon is an official Ubuntu flavour: same Canonical-signed boot
+# chain, same casper layout, same archive. It is not the Linux Mint ISO, whose
+# own repos, update policy and installer would break the Ubuntu assumptions.
+ISO_URL="https://cdimage.ubuntu.com/ubuntucinnamon/releases/24.04.5/release/ubuntucinnamon-24.04.5-desktop-amd64.iso"
+ISO_SHA256="7fef6d987a29d2a81e4edac3fc6d640ce533f1d95d82c28119baaefc9fbd4721"
+ISO_BYTES=6961655808          # 6.48 GiB, disk-space estimate only
+VOLID="$DCT_PRETTY_NAME"
 
 WORK="$REPO/.iso-work"
 OUT="$REPO/dist"
-BASE="$WORK/base.iso"
+# Cache under the upstream filename: switching base images must not silently
+# reuse the previous one. The checksum would catch it, but only after the
+# wrong image has already been read.
+BASE="$WORK/$(basename "$ISO_URL")"
 ROOTFS="$WORK/rootfs"
 NEWSQ="$WORK/new-base.squashfs"
 EXTRAS="$WORK/extras"
@@ -75,7 +82,8 @@ while [ $# -gt 0 ]; do
         --no-extras)     EXTRAS_PKGS=0 ;;
         --check-updates) CHECK_UPDATES=1 ;;
         --jobs)          JOBS="${2:?--jobs needs a number}"; shift ;;
-        -h|--help)       sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help)       awk 'NR>2 && /^# ----/{exit} NR>2' "$0" \
+                             | sed 's/^# \{0,1\}//'; exit 0 ;;
         *)               die "unknown option: $1  (try --help)" ;;
     esac
     shift
@@ -368,7 +376,7 @@ ok "unmounted the layers"
 # 3b. Desktop extras the stock live layer does not carry
 #
 # The gschema override asks for Papirus-Dark and Inter. Without the packages
-# GNOME silently falls back to Adwaita, which reads as "half-branded".
+# the desktop silently falls back to Adwaita, which reads as "half-branded".
 # ---------------------------------------------------------------------------
 if [ "$EXTRAS_PKGS" -eq 1 ]; then
     say "installing desktop extras"
@@ -438,13 +446,13 @@ ln -sfn /dev/null "$ROOTFS/etc/systemd/user/ubuntu-desktop-installer.service"
 installer_desktop="$ROOTFS/var/lib/snapd/desktop/applications/ubuntu-desktop-bootstrap_ubuntu-desktop-bootstrap.desktop"
 if [ -f "$installer_desktop" ]; then
     sed -i -e '/^NoDisplay=/d' \
-           -e 's/^Name=.*/Name=Install DCT OS/' \
+           -e "s/^Name=.*/Name=Install $DCT_NAME/" \
            -e 's/^Icon=.*/Icon=dct-os/' "$installer_desktop"
     # snapd owns the file above and may rewrite it; a copy in
     # /usr/share/applications takes precedence and cannot be clobbered.
     install -D -m 0644 "$installer_desktop" \
         "$ROOTFS/usr/share/applications/$(basename "$installer_desktop")"
-    ok "installer launcher -> Install DCT OS (icon dct-os)"
+    ok "installer launcher -> Install $DCT_NAME (icon dct-os)"
 else
     warn "no installer desktop entry found — launcher keeps the Ubuntu name"
 fi
@@ -659,12 +667,16 @@ for p in "${menus[@]}"; do
         }
     ' "$p"
 
-    # User-visible strings, inside menu entries only.
-    perl -i -pe '
+    # User-visible strings, inside menu entries only. Longest match first:
+    # Ubuntu Cinnamon's menus say "Ubuntu Cinnamon", which the bare \bUbuntu\b
+    # rule would otherwise turn into "<name> Cinnamon".
+    DCT_NAME="$DCT_NAME" DCT_PRETTY_NAME="$DCT_PRETTY_NAME" perl -i -pe '
         if (/^\s*(menuentry|menu label|menu title|text|label)\b/) {
-            s/Ubuntu 24\.04(\.\d+)? LTS/DCT OS 1.0/g;
-            s/\bUbuntu\b/DCT OS/g;
-            s/Try or Install DCT OS/Try DCT OS/g;
+            s/Ubuntu Cinnamon 24\.04(\.\d+)? LTS/$ENV{DCT_PRETTY_NAME}/g;
+            s/Ubuntu 24\.04(\.\d+)? LTS/$ENV{DCT_PRETTY_NAME}/g;
+            s/\bUbuntu Cinnamon\b/$ENV{DCT_NAME}/g;
+            s/\bUbuntu\b/$ENV{DCT_NAME}/g;
+            s/Try or Install \Q$ENV{DCT_NAME}\E/Try $ENV{DCT_NAME}/g;
         }
     ' "$p"
 
@@ -771,7 +783,7 @@ fi
 # 9. Assemble the ISO, preserving the boot equipment
 # ---------------------------------------------------------------------------
 say "assembling ISO"
-OUTISO="$OUT/DCT-OS-${DCT_VERSION}-live-amd64.iso"
+OUTISO="$OUT/Dominican-OS-${DCT_VERSION}-live-amd64.iso"
 rm -f "$OUTISO"
 
 MAP=( -map "$NEWSQ" "/casper/$BASE_LAYER"
@@ -883,9 +895,11 @@ if xorriso -osirrox on -indev "$OUTISO" \
     grep -q 'ignore_uuid' "$WORK/tmp/grub.cfg" \
         && ok "grub.cfg carries ignore_uuid (medium detection cannot fail on UUID)" \
         || warn "grub.cfg has no ignore_uuid"
-    grep -q 'DCT OS' "$WORK/tmp/grub.cfg" \
-        && ok "grub.cfg shows the DCT OS menu label" \
+    grep -qF "$DCT_NAME" "$WORK/tmp/grub.cfg" \
+        && ok "grub.cfg shows the $DCT_NAME menu label" \
         || warn "grub.cfg still shows the upstream label"
+    grep -qE '^[[:space:]]*(menuentry|menu label|menu title).*Cinnamon' "$WORK/tmp/grub.cfg" \
+        && warn "grub.cfg menu title still mentions Cinnamon — substitution missed a form" || true
     grep -qE -- '--fs-uuid|--label' "$WORK/tmp/grub.cfg" \
         && warn "grub.cfg still looks up the medium by uuid/label" || true
 fi
@@ -947,7 +961,7 @@ cat <<EOF
     sudo dd if=$OUTISO of=/dev/sdX bs=4M status=progress oflag=sync
     sync
 
-  Boot the target PC from it and pick "Try DCT OS".
+  Boot the target PC from it and pick "Try $DCT_NAME".
   This is a try-only demo image. It does not install or modify the target disk.
 
   Prove which image booted, on the live desktop:

@@ -1,4 +1,4 @@
-// DCT OS — re-assert branding after any package transaction.
+// Dominican OS — re-assert branding after any package transaction.
 //
 // Why this exists: several branded files sit at paths owned by packages
 // (base-files ships /etc/os-release, for example). The dpkg diversions

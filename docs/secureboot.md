@@ -60,7 +60,7 @@ which is itself a deliverable worth listing in the proposal.
 
 **Keep the signed boot chain. Do not replace it.**
 
-A DCT OS image that carries `shim-signed` + `grub-efi-amd64-signed` +
+A Dominican OS image that carries `shim-signed` + `grub-efi-amd64-signed` +
 Canonical-signed kernels will boot on *every* machine, in *every* state:
 
 - Secure Boot **enabled** → the signed chain validates, boots normally.

@@ -26,6 +26,9 @@ REPO="$(cd "$HERE/.." && pwd)"
 SCRIPT="$REPO/payload/installer/dct-installer-brand"
 ART="$REPO/payload/installer"
 
+# shellcheck source=/dev/null
+. "$REPO/payload/branding/tokens.env"
+
 TMP="${TMPDIR:-/tmp}/dct-installer-test.$$"
 SNAP="$TMP/snap/ubuntu-desktop-bootstrap/680"
 ASSETS="$SNAP/bin/data/flutter_assets/packages/ubuntu_provision/assets"
@@ -73,6 +76,7 @@ env \
     DCT_INSTALLER_ASSETS="$ART" \
     DCT_INSTALLER_RUN="$TMP/run" \
     DCT_INSTALLER_DESKTOP_DIR="$DESKTOP_DIR" \
+    DCT_NAME="$DCT_NAME" \
     sh "$SCRIPT"
 
 # --- assertions -----------------------------------------------------------
@@ -92,7 +96,7 @@ done
 [ "$(cat "$SNAP/bin/ubuntu_bootstrap")" = binary ] \
     && pass "rest of the snap untouched" || bad "rest of the snap was damaged"
 
-grep -q '^Name=Install DCT OS$' "$DESKTOP_DIR/ubuntu-desktop-bootstrap_ubuntu-desktop-bootstrap.desktop" \
+grep -qxF "Name=Install $DCT_NAME" "$DESKTOP_DIR/ubuntu-desktop-bootstrap_ubuntu-desktop-bootstrap.desktop" \
     && pass "launcher renamed" || bad "launcher name not changed"
 grep -q '^Icon=dct-os$' "$DESKTOP_DIR/ubuntu-desktop-bootstrap_ubuntu-desktop-bootstrap.desktop" \
     && pass "launcher icon set" || bad "launcher icon not changed"

@@ -1,4 +1,4 @@
-# How DCT OS fits together
+# How Dominican OS fits together
 
 ## Layers
 
@@ -41,7 +41,7 @@ it:
    drift apart.
 
 Both go through the same script (`/usr/share/dct-os/apply-branding.sh`), so
-there is exactly one implementation of "what DCT OS branding means".
+there is exactly one implementation of "what Dominican OS branding means".
 
 ### The loop
 
@@ -204,11 +204,11 @@ links the snap. The build also drops a copy in `/usr/share/applications`, which
 is the one that normally wins. Text baked into `libapp.so` ("Install Ubuntu",
 the release name) is not reachable without rebuilding the snap, so the release
 name is carried by `/.disk/info` instead: casper's `25adduser` rewrites the
-launcher as `Install $RELEASE`, and `/.disk/info` already says `DCT OS`.
+launcher as `Install $RELEASE`, and `/.disk/info` already says `Dominican OS`.
 
 The live session is try-only: `ubuntu-desktop-installer.service` is masked so
 the installer does not auto-start over the DCT desktop. It is started by hand
-from the app grid, as **Install DCT OS**.
+from the app grid, as **Install Dominican OS**.
 
 ## Native path (if containers cannot mount)
 
@@ -253,7 +253,7 @@ boots the ISO's own kernel and initrd in text mode and waits for a login prompt.
 | Boots, then panics looking for `/casper` | layer chain broken — a renamed or missing layer file | check the build log's `layer chain:` line against `xorriso -find /casper` |
 | Boots the branded GRUB, then stock Ubuntu | branding went into the wrong layer | it must go into the base layer; check `branded content goes into:` |
 | Installed system is blank | `install-sources.yaml` points at an empty upper layer | both entries must point at the base layer |
-| Installer offers two identical entries | expected — both are DCT OS; the ids are kept only so the installer recognises them | — |
+| Installer offers two identical entries | expected — both are Dominican OS; the ids are kept only so the installer recognises them | — |
 | Build dies with "not enough disk space" | peak is ~22 GB (ISO + tree + new squashfs) | free space; layers are deleted as soon as they are mounted |
 | Branding gone after `apt upgrade` | the update shield did not install | run `dct-rebrand`; see `updates.md` |
 

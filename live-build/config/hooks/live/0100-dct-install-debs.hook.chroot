@@ -1,6 +1,6 @@
 #!/bin/sh
 # Runs INSIDE the live-build chroot, after package installation.
-# Installs the locally built DCT OS packages that build-iso.sh copied in.
+# Installs the locally built Dominican OS packages that build-iso.sh copied in.
 set -e
 
 DEBDIR=/var/tmp/dct-debs

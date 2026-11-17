@@ -38,7 +38,7 @@ Verify: reboot and watch. `sudo plymouth-set-default-theme --list`.
 | Item | Path | Notes |
 |---|---|---|
 | Greeter logo | `/usr/share/pixmaps/dct-logo.png` | 🎨 |
-| Greeter banner | gschema `org.gnome.login-screen` | ✅ |
+| Greeter banner | gschema `x.dm.slick-greeter` | ✅ |
 | Wallpapers (day/dark/lock) | `/usr/share/backgrounds/dct/` | 🎨 3840×2160 |
 | GTK theme | `/usr/share/themes/dct-gtk/` | 🎨 Phase 3 work — build on Materia or Colloid, not from scratch |
 | Icon theme | `/usr/share/icons/` | `Papirus-Dark` recoloured, or ship as-is initially |

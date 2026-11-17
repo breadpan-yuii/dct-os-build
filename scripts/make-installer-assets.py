@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the installer artwork for DCT OS from the single source seal.
+"""Generate the installer artwork for Dominican OS from the single source seal.
 
 The Ubuntu desktop installer (snap `ubuntu-desktop-bootstrap`) is a Flutter app.
 It draws every page from six files inside the snap:

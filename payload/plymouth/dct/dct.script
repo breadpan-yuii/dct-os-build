@@ -1,4 +1,4 @@
-# DCT OS plymouth splash. Colours must match tokens.env.
+# Dominican OS plymouth splash. Colours must match tokens.env.
 # Tested shape; verify visually with: sudo plymouthd --debug ; sudo plymouth --show-splash
 
 Window.SetBackgroundTopColor(0.043, 0.102, 0.200);    # #0B2545

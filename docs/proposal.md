@@ -1,4 +1,4 @@
-# DCT OS
+# Dominican OS
 
 **A customized, institution-managed Linux desktop for Dominican College of Tarlac**
 
@@ -20,7 +20,7 @@
 
 ## 1. Project summary
 
-DCT OS is a customized Linux desktop built for Dominican College of Tarlac,
+Dominican OS is a customized Linux desktop built for Dominican College of Tarlac,
 derived from **Ubuntu 24.04 LTS** and packaged for internal institutional use.
 It delivers the college's standard application set, institutional identity, and
 classroom management tooling in a single reproducible image that the IT office
@@ -71,7 +71,7 @@ desktop it cannot fully own. Zorin's own branding, artwork and some components a
 not licensed for modification and redistribution ([Section 10](#10-legal-and-compliance)).
 The college can *use* Zorin; it cannot *rebrand* it.
 
-DCT OS addresses all four by building on the same underlying base the college
+Dominican OS addresses all four by building on the same underlying base the college
 already runs, but under DCT's own name, configuration, and control.
 
 ---
@@ -95,7 +95,7 @@ establish a maintainable process for keeping it current.
 
 | # | Objective | Success indicator |
 |---|---|---|
-| 1 | Produce a bootable DCT OS image on Ubuntu 24.04 LTS | ISO boots in UEFI and legacy mode; installer completes |
+| 1 | Produce a bootable Dominican OS image on Ubuntu 24.04 LTS | ISO boots in UEFI and legacy mode; installer completes |
 | 2 | Apply full institutional branding | `verify-branding.sh` reports zero failures; no third-party marks remain |
 | 3 | Package the standard application set | Metapackage installs the full set with one command |
 | 4 | Provide an office productivity stack | OnlyOffice default; LibreOffice fallback; Wine present |
@@ -120,7 +120,7 @@ establish a maintainable process for keeping it current.
 
 | Excluded | Reason |
 |---|---|
-| Public release of DCT OS outside DCT | Requires Canonical licensing discussion; unnecessary now |
+| Public release of Dominican OS outside DCT | Requires Canonical licensing discussion; unnecessary now |
 | Any use of Zorin OS artwork, themes or ISO content | Prohibited by Zorin's terms — see §10 |
 | Bundling Microsoft Office | Proprietary; cannot be redistributed |
 | Rebuilding Ubuntu packages from source | Not required for internal use under Canonical's IPRights policy |
@@ -134,7 +134,7 @@ establish a maintainable process for keeping it current.
 
 ### 6.1 Architecture
 
-DCT OS is four layers over an untouched base:
+Dominican OS is four layers over an untouched base:
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
@@ -154,7 +154,7 @@ DCT OS is four layers over an untouched base:
 
 This is deliberately the same structure Zorin OS uses: a stock Ubuntu 24.04 base
 plus **33 `zorin-*` packages** providing desktop defaults, themes, artwork and
-wallpapers. Building on the same pattern means DCT OS inherits a decade of
+wallpapers. Building on the same pattern means Dominican OS inherits a decade of
 hardening rather than inventing it, and it means the IT office's existing Ubuntu
 knowledge transfers directly.
 
@@ -194,7 +194,7 @@ Zorin OS ships Canonical's signed boot chain (`shim-signed`,
 expected to be booting with Secure Boot **enforced** unless firmware was changed
 during installation. This is a hypothesis, not a finding.
 
-DCT OS will **preserve the signed boot chain** rather than replace it. An image
+Dominican OS will **preserve the signed boot chain** rather than replace it. An image
 carrying that chain boots whether Secure Boot is on or off, so no firmware change
 is required on any machine, and a mixed fleet becomes uniform for free.
 
@@ -263,7 +263,7 @@ environment for two weeks. Collect structured feedback from teachers and student
 
 | # | Deliverable | Form |
 |---|---|---|
-| 1 | DCT OS installation image | Hybrid UEFI/BIOS ISO, versioned |
+| 1 | Dominican OS installation image | Hybrid UEFI/BIOS ISO, versioned |
 | 2 | Reproducible build repository | Git repository with build scripts |
 | 3 | Branding asset pack | Vector sources, licensed for institutional use |
 | 4 | Campus package mirror | Configured server |
@@ -312,14 +312,14 @@ is not part of this project's cost.
 |---|---|
 | Ubuntu modification for internal use | **Permitted** by Canonical's IPRights policy |
 | Redistribution of modified Ubuntu | **Not proposed.** Internal deployment only |
-| Using the name "DCT OS" | Permitted with college approval; must not imply Canonical or Zorin endorsement |
+| Using the name "Dominican OS" | Permitted with college approval; must not imply Canonical or Zorin endorsement |
 | Zorin OS name, artwork, ISO | **Not used.** Prohibited without written consent |
 | GPL / AGPL packages | Redistributed with licence notices intact; source available on request |
 | Microsoft Office | Not bundled; installed only where licensed |
 | Fonts | Open-licensed (SIL OFL) only |
 | Institutional name and seal | Requires written approval from the college |
 
-The About screen and documentation will state: *"DCT OS is built on Ubuntu 24.04
+The About screen and documentation will state: *"Dominican OS is built on Ubuntu 24.04
 LTS. Not affiliated with Zorin OS or Canonical. Ubuntu is a trademark of Canonical
 Ltd. Zorin OS is a trademark of Zorin OS Technologies Ltd."*
 
