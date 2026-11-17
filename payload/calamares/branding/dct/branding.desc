@@ -10,17 +10,17 @@
 componentName: dct
 
 strings:
-    productName:         "Dominican OS"
-    shortProductName:    "Dominican OS"
-    version:             "1.0"
-    shortVersion:        "1.0"
-    versionedName:       "Dominican OS 1.0 (tarlac)"
-    shortVersionedName:  "Dominican OS 1.0"
-    bootloaderEntryName: "Dominican OS"
-    productUrl:          "https://dct.edu.ph"
-    supportUrl:          "https://dct.edu.ph/helpdesk"
-    releaseNotesUrl:     "https://dct.edu.ph/helpdesk"
-    knownIssuesUrl:      "https://dct.edu.ph/helpdesk"
+    productName:         "@DCT_NAME@"
+    shortProductName:    "@DCT_NAME@"
+    version:             "@DCT_VERSION@"
+    shortVersion:        "@DCT_VERSION@"
+    versionedName:       "@DCT_PRETTY_NAME@ (@DCT_CODENAME@)"
+    shortVersionedName:  "@DCT_PRETTY_NAME@"
+    bootloaderEntryName: "@DCT_NAME@"
+    productUrl:          "@DCT_HOME_URL@"
+    supportUrl:          "@DCT_SUPPORT_URL@"
+    releaseNotesUrl:     "@DCT_SUPPORT_URL@"
+    knownIssuesUrl:      "@DCT_SUPPORT_URL@"
 
 images:
     productLogo:    "logo.png"
@@ -28,15 +28,15 @@ images:
     productWelcome: "welcome.png"
 
 style:
-    # Keep in sync with payload/branding/tokens.env
-    sidebarBackground:      "#0B2545"
-    sidebarText:            "#FFFFFF"
-    sidebarTextSelect:      "#F2C14E"
-    sidebarTextHighlight:   "#F2C14E"
-    sidebarBackgroundCurrent: "#071A33"
+    # Rendered from payload/branding/tokens.env by apply-branding.sh.
+    sidebarBackground:      "@DCT_PURPLE_DEEP@"
+    sidebarText:            "@DCT_WHITE@"
+    sidebarTextSelect:      "@DCT_PURPLE_LIGHT@"
+    sidebarTextHighlight:   "@DCT_PURPLE_LIGHT@"
+    sidebarBackgroundCurrent: "@DCT_GRAY_DARK@"
 
     windowPlacement: center
 
     # Uncomment once logo.png exists and you have checked the layout on a
     # 1024x768 screen, which is what the lab monitors actually are.
-    # sidebarBackgroundCurrent: "#13315C"
+    # sidebarBackgroundCurrent: "@DCT_PURPLE@"

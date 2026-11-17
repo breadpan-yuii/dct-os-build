@@ -153,6 +153,21 @@ if [ "$DO_STRUCT" -eq 1 ]; then
             else
                 f "Ubuntu installer auto-start mask missing from the live system"
             fi
+            if unsquashfs -q -cat "$TMP/base.squashfs" etc/lightdm/slick-greeter.conf 2>/dev/null \
+                    | grep -q '^background=/usr/share/backgrounds/dct/dct-greeter.png'; then
+                p "greeter policy points at the purple/gray backdrop"
+            else
+                f "greeter policy missing or not pointing at dct-greeter.png"
+            fi
+            # Large listing: grep -q can SIGPIPE unsquashfs, so relax pipefail
+            # around this one (same reason as the content checks in the build).
+            if ( set +o pipefail
+                 unsquashfs -q -ll "$TMP/base.squashfs" 2>/dev/null \
+                     | grep -q 'usr/share/themes/Yaru-purple-dark/' ); then
+                p "Yaru-purple-dark GTK theme present"
+            else
+                f "Yaru-purple-dark theme missing — desktop falls back to Adwaita"
+            fi
             rm -f "$TMP/base.squashfs"
         else
             f "could not extract the base layer"

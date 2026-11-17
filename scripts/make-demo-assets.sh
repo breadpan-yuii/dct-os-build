@@ -25,12 +25,14 @@ OUT="$REPO/payload/assets"
 SRC="$OUT/source"
 mkdir -p "$WORK" "$OUT"
 
-NAVY="#$DCT_NAVY"
-DEEP="#$DCT_NAVY_DEEP"
-GOLD="#$DCT_GOLD"
+PURPLE="#$DCT_PURPLE"
+PURPLE_DEEP="#$DCT_PURPLE_DEEP"
+PURPLE_LIGHT="#$DCT_PURPLE_LIGHT"
+GRAY="#$DCT_GRAY"
+GRAY_DARK="#$DCT_GRAY_DARK"
+GRAY_MID="#$DCT_GRAY_MID"
 WHITE="#$DCT_WHITE"
-MUTED="$DCT_TEXT_MUTED"
-MUTED="#$MUTED"
+MUTED="#$DCT_TEXT_MUTED"
 FONT="${DCT_FONT:-Inter}"
 
 say()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
@@ -81,9 +83,9 @@ lockup_svg() {
         # Draw the old placeholder lockup so the output is never empty.
         printf '  <g transform="translate(%s,%s) scale(%.4f)" opacity="%s">\n' \
             "$x" "$y" "$(awk -v w="$w" 'BEGIN{print w/512}')" "$op"
-        printf '    <rect width="512" height="512" rx="96" fill="%s"/>\n' "$DEEP"
-        printf '    <rect x="28" y="28" width="456" height="456" rx="76" fill="none" stroke="%s" stroke-width="6"/>\n' "$GOLD"
-        printf '    <text x="256" y="268" font-family="%s" font-size="132" font-weight="bold" fill="%s" text-anchor="middle">DCT</text>\n' "$FONT" "$GOLD"
+        printf '    <rect width="512" height="512" rx="96" fill="%s"/>\n' "$PURPLE_DEEP"
+        printf '    <rect x="28" y="28" width="456" height="456" rx="76" fill="none" stroke="%s" stroke-width="6"/>\n' "$PURPLE_LIGHT"
+        printf '    <text x="256" y="268" font-family="%s" font-size="132" font-weight="bold" fill="%s" text-anchor="middle">DCT</text>\n' "$FONT" "$PURPLE_LIGHT"
         printf '    <text x="256" y="330" font-family="%s" font-size="40" font-weight="bold" fill="%s" text-anchor="middle">OS</text>\n' "$FONT" "$MUTED"
         printf '  </g>\n'
     fi
@@ -106,13 +108,15 @@ EOF
 }
 
 # ---------------------------------------------------------------------------
-# 1. Wallpapers — 3840×2160, three variants.
+# 1. Wallpapers — 3840×2160. Purple + gray: three desktop variants plus the
+#    greeter backdrop (slick-greeter draws the login box over it).
 # ---------------------------------------------------------------------------
 wallpaper() {   # $1=variant  $2=out.svg
-    local variant="$1" top="$NAVY" bottom="$DEEP" glow="0.20" op="0.10"
+    local variant="$1" top="$PURPLE_DEEP" bottom="$GRAY_DARK" glow="0.22" op="0.10"
     case "$variant" in
-        dark) top="$DEEP";    bottom="#04101F"; glow="0.10"; op="0.07" ;;
-        lock) top="#04101F";  bottom="#020A14"; glow="0.06"; op="0.05" ;;
+        dark)    top="#2A2450"; bottom="#1A1A1A"; glow="0.12"; op="0.07" ;;
+        lock)    top="#231E42"; bottom="#141414"; glow="0.08"; op="0.05" ;;
+        greeter) top="$PURPLE";  bottom="$GRAY";   glow="0.28"; op="0.09" ;;
     esac
 
     # Watermark: right third, width 1080.
@@ -131,12 +135,12 @@ wallpaper() {   # $1=variant  $2=out.svg
       <stop offset="100%" stop-color="$bottom"/>
     </linearGradient>
     <radialGradient id="glow" cx="0.22" cy="0.82" r="0.62">
-      <stop offset="0%" stop-color="$GOLD" stop-opacity="$glow"/>
-      <stop offset="100%" stop-color="$GOLD" stop-opacity="0"/>
+      <stop offset="0%" stop-color="$PURPLE_LIGHT" stop-opacity="$glow"/>
+      <stop offset="100%" stop-color="$PURPLE_LIGHT" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="stripe" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="$GOLD" stop-opacity="0.55"/>
-      <stop offset="100%" stop-color="$GOLD" stop-opacity="0"/>
+      <stop offset="0%" stop-color="$PURPLE_LIGHT" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="$PURPLE_LIGHT" stop-opacity="0"/>
     </linearGradient>
   </defs>
   <rect width="3840" height="2160" fill="url(#bg)"/>
@@ -147,7 +151,7 @@ EOF
         lockup_svg "$wm_w" "$wm_x" "$wm_y" "$op"
         cat <<EOF
   <g transform="translate(180,180)">
-    <rect width="14" height="86" fill="$GOLD"/>
+    <rect width="14" height="86" fill="$PURPLE_LIGHT"/>
     <text x="46" y="34" font-family="$FONT" font-size="34" font-weight="bold"
           fill="$WHITE" letter-spacing="3">$DCT_NAME</text>
     <text x="46" y="72" font-family="$FONT" font-size="22" fill="$MUTED"
@@ -168,12 +172,12 @@ grub_background() {   # $1=out.svg
         cat <<EOF
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="$DEEP"/>
-      <stop offset="100%" stop-color="#020A14"/>
+      <stop offset="0%" stop-color="$PURPLE_DEEP"/>
+      <stop offset="100%" stop-color="$GRAY_DARK"/>
     </linearGradient>
     <radialGradient id="rg" cx="0.85" cy="0.1" r="0.7">
-      <stop offset="0%" stop-color="$GOLD" stop-opacity="0.07"/>
-      <stop offset="100%" stop-color="$GOLD" stop-opacity="0"/>
+      <stop offset="0%" stop-color="$PURPLE_LIGHT" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="$PURPLE_LIGHT" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <rect width="1920" height="1080" fill="url(#g)"/>
@@ -182,7 +186,7 @@ EOF
         lockup_svg 460 130 96 1
         # Rule + product line under the mark. Menu starts at 30% (324 px).
         cat <<EOF
-  <rect x="130" y="248" width="120" height="4" fill="$GOLD"/>
+  <rect x="130" y="248" width="120" height="4" fill="$PURPLE_LIGHT"/>
   <text x="130" y="292" font-family="$FONT" font-size="17" fill="$MUTED"
         letter-spacing="2">$DCT_PRETTY_NAME  ·  $DCT_VENDOR</text>
 </svg>
@@ -198,27 +202,31 @@ say "deriving assets"
 wallpaper day  "$WORK/wall-day.svg";  rsvg-convert -w 3840 -h 2160 -o "$OUT/dct-default.png"      "$WORK/wall-day.svg"
 wallpaper dark "$WORK/wall-dark.svg"; rsvg-convert -w 3840 -h 2160 -o "$OUT/dct-default-dark.png" "$WORK/wall-dark.svg"
 wallpaper lock "$WORK/wall-lock.svg"; rsvg-convert -w 3840 -h 2160 -o "$OUT/dct-lock.png"         "$WORK/wall-lock.svg"
+# The greeter is the one screen the college asked to be visibly purple + gray.
+wallpaper greeter "$WORK/wall-greeter.svg"
+rsvg-convert -w 3840 -h 2160 -o "$OUT/dct-greeter.png" "$WORK/wall-greeter.svg"
 
 grub_background "$WORK/grub-bg.svg"
 rsvg-convert -w 1920 -h 1080 -o "$OUT/background.png" "$WORK/grub-bg.svg"
 
-# Greeter icon — the seal, centred on a transparent 192².
+# Greeter icon — the seal, centred on a transparent 256². slick-greeter scales
+# by height, so the extra pixels are free sharpness on HiDPI panels.
 if [ "$HAVE_SEAL" -eq 1 ]; then
-    magick "$WORK/seal.png" -resize 168x168 \
-           -background none -gravity center -extent 192x192 "$OUT/dct-logo.png"
+    magick "$WORK/seal.png" -resize 224x224 \
+           -background none -gravity center -extent 256x256 "$OUT/dct-logo.png"
 else
-    # Placeholder: navy rounded tile with the wordmark.
+    # Placeholder: purple rounded tile with the wordmark.
     cat > "$WORK/emblem.svg" <<EOF
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
-  <rect width="512" height="512" rx="96" fill="$DEEP"/>
-  <rect x="28" y="28" width="456" height="456" rx="76" fill="none" stroke="$GOLD" stroke-width="6"/>
+  <rect width="512" height="512" rx="96" fill="$PURPLE_DEEP"/>
+  <rect x="28" y="28" width="456" height="456" rx="76" fill="none" stroke="$PURPLE_LIGHT" stroke-width="6"/>
   <text x="256" y="268" font-family="$FONT" font-size="132" font-weight="bold"
-        fill="$GOLD" text-anchor="middle" letter-spacing="6">DCT</text>
+        fill="$PURPLE_LIGHT" text-anchor="middle" letter-spacing="6">DCT</text>
   <text x="256" y="330" font-family="$FONT" font-size="40" font-weight="bold"
         fill="$MUTED" text-anchor="middle" letter-spacing="14">OS</text>
 </svg>
 EOF
-    rsvg-convert -w 192 -h 192 -o "$OUT/dct-logo.png" "$WORK/emblem.svg"
+    rsvg-convert -w 256 -h 256 -o "$OUT/dct-logo.png" "$WORK/emblem.svg"
 fi
 
 # Plymouth logo — the lockup, contained in 480×270 with breathing room.
@@ -232,13 +240,13 @@ rsvg-convert -w 480 -h 270 -o "$OUT/logo.png" "$WORK/plymouth-logo.svg"
 # Plymouth progress bar.
 cat > "$WORK/progress_bg.svg" <<EOF
 <svg xmlns="http://www.w3.org/2000/svg" width="300" height="8">
-  <rect width="300" height="8" rx="4" fill="$DEEP"/>
-  <rect width="300" height="8" rx="4" fill="none" stroke="$GOLD" stroke-opacity="0.35"/>
+  <rect width="300" height="8" rx="4" fill="$PURPLE_DEEP"/>
+  <rect width="300" height="8" rx="4" fill="none" stroke="$PURPLE_LIGHT" stroke-opacity="0.35"/>
 </svg>
 EOF
 cat > "$WORK/progress_fg.svg" <<EOF
 <svg xmlns="http://www.w3.org/2000/svg" width="300" height="8">
-  <rect width="300" height="8" rx="4" fill="$GOLD"/>
+  <rect width="300" height="8" rx="4" fill="$PURPLE_LIGHT"/>
 </svg>
 EOF
 rsvg-convert -w 300 -h 8 -o "$OUT/progress_bg.png" "$WORK/progress_bg.svg"

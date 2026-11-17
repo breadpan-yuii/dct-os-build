@@ -2,12 +2,12 @@
 
 Drop files here before running `scripts/apply-branding.sh`. Names are load-bearing.
 
-> **Current contents are placeholders.** The PNGs in this directory were generated
-> by `scripts/make-demo-assets.sh` from `payload/branding/tokens.env` so the demo
-> and the brand audit can run before the design office delivers anything. They are
-> flat colour + the letters "DCT" — not the institutional seal. Replace every one
-> of them before the pilot, and before you show this to anyone outside the project.
-> Regenerate with `make demo`.
+> **Generated from the source artwork.** The PNGs here are produced by
+> `scripts/make-demo-assets.sh` from the seal and lockup in `source/`, using the
+> colours in `payload/branding/tokens.env`. They are good enough for the demo,
+> but they are renders — not the design office's masters. Replace them when DCT
+> delivers vector artwork, and regenerate with `make demo` after any palette
+> change.
 
 ## Required
 
@@ -15,11 +15,12 @@ Drop files here before running `scripts/apply-branding.sh`. Names are load-beari
 |---|---|---|
 | `logo.png` | `/usr/share/plymouth/themes/dct/logo.png` | 480×270, transparent PNG |
 | `logo.svg` | `/usr/share/pixmaps/dct-logo.svg` | vector source, the master |
-| `dct-logo.png` | `/usr/share/pixmaps/dct-logo.png` | 192×192 for the greeter |
+| `dct-logo.png` | `/usr/share/pixmaps/dct-logo.png` | 256×256, transparent, for the greeter |
 | `background.png` | `/boot/grub/themes/dct/background.png` | 1920×1080 |
 | `dct-default.png` | `/usr/share/backgrounds/dct/` | 3840×2160, day |
 | `dct-default-dark.png` | `/usr/share/backgrounds/dct/` | 3840×2160, dark |
 | `dct-lock.png` | `/usr/share/backgrounds/dct/` | 3840×2160, lock screen |
+| `dct-greeter.png` | `/usr/share/backgrounds/dct/` | 3840×2160, **login screen** — must read purple + gray |
 | `progress_bg.png` / `progress_fg.png` | plymouth theme dir | 300×8, optional |
 
 ## Rules

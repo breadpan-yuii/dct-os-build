@@ -16,3 +16,7 @@ secureboot-report*.txt
 # editor
 *.swp
 .DS_Store
+
+# python
+__pycache__/
+*.pyc

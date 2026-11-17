@@ -81,6 +81,17 @@ before promising anyone an ISO.
 `make pkgs` / `make iso` require `podman` (or `docker`) and ~25 GB free disk.
 The live ISO path needs `xorriso` and `squashfs-tools` instead.
 
+## Theme
+
+Purple + gray, from one file: `payload/branding/tokens.env`. The GTK theme,
+icons, Cinnamon shell and login greeter all use Ubuntu's `Yaru-purple-dark`,
+which ships in the base and carries exactly the DCT accent (`#7764D8`), so
+there is no hand-maintained theme to break on an update. The login screen is
+`dct-greeter.png` (purple→gray) plus `/etc/lightdm/slick-greeter.conf`. GRUB,
+plymouth, Calamares and the installer artwork are templates with `@DCT_*@`
+placeholders that `apply-branding.sh` renders from the tokens. Change a hex in
+`tokens.env`, rebuild, done.
+
 ## Layout
 
 ```

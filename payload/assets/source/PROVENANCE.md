@@ -28,8 +28,12 @@ Outstanding before the pilot:
       adequate as a permanent source — a 5000 px seal scaled to a 192 px greeter
       icon every build loses the ability to thin measured strokes.
 - [ ] Confirmation of the official brand colours. The seal is monochrome, so the
-      navy/gold palette in `payload/branding/tokens.env` is **our** accent choice,
-      not a DCT brand value.
+      **purple + gray** palette in `payload/branding/tokens.env` is **our**
+      accent choice, not a DCT brand value. The purple (`#7764D8`) was picked
+      because it is the exact accent of the `Yaru-purple-dark` theme that ships
+      in the Ubuntu Cinnamon base, so the desktop, icons and greeter agree
+      without a hand-authored theme. If DCT publishes a brand sheet, change the
+      hex in `tokens.env` and rebuild — every generated asset follows.
 
 ## Rules
 

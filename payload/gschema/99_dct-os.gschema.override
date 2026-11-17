@@ -7,13 +7,23 @@
 # org.gnome.* sections are kept so the same payload still brands a GNOME
 # base; glib-compile-schemas ignores overrides for schemas or keys that are
 # not installed (verified: it warns, exits 0).
+#
+# Theme choice: Yaru's purple variant ships in the base (yaru-theme-gtk,
+# yaru-theme-icon) and carries exactly the DCT accent (#7764D8, see
+# payload/branding/tokens.env). Using it for GTK, icons, the Cinnamon shell and
+# the greeter means one accent everywhere, and no hand-maintained theme to rot
+# on the next Yaru update. Yaru-purple-dark has no metacity-1 directory, so
+# window borders come from Yaru-dark, which does.
+#
+# Verify every name below actually exists before shipping:
+#   ./scripts/verify-branding.sh
 
 [org.gnome.desktop.background]
 picture-uri='file:///usr/share/backgrounds/dct/dct-default.png'
 picture-uri-dark='file:///usr/share/backgrounds/dct/dct-default-dark.png'
 picture-options='zoom'
-primary-color='#0B2545'
-secondary-color='#071A33'
+primary-color='#3B326C'
+secondary-color='#232323'
 color-shading-type='solid'
 
 [org.gnome.desktop.interface]
@@ -21,14 +31,14 @@ font-name='Inter 11'
 document-font-name='Inter 11'
 monospace-font-name='JetBrains Mono 11'
 color-scheme='prefer-dark'
-cursor-theme='dct-cursors'
-icon-theme='Papirus-Dark'
-gtk-theme='dct-gtk'
+cursor-theme='Yaru'
+icon-theme='Yaru-purple-dark'
+gtk-theme='Yaru-purple-dark'
 clock-format='12h'
 
 [org.gnome.desktop.screensaver]
 picture-uri='file:///usr/share/backgrounds/dct/dct-lock.png'
-primary-color='#071A33'
+primary-color='#232323'
 
 [org.gnome.login-screen]
 logo='/usr/share/pixmaps/dct-logo.png'
@@ -39,7 +49,7 @@ banner-message-text='Dominican College of Tarlac — Authorized users only. Acti
 idle-delay=uint32 600
 
 [org.gnome.desktop.sound]
-theme-name='dct'
+theme-name='Yaru'
 
 # Student-facing dock / taskbar. Trim to what the labs actually use.
 [org.gnome.shell]
@@ -63,25 +73,36 @@ sort-directories-first=true
 [org.cinnamon.desktop.background]
 picture-uri='file:///usr/share/backgrounds/dct/dct-default.png'
 picture-options='zoom'
-primary-color='#0B2545'
-secondary-color='#071A33'
+primary-color='#3B326C'
+secondary-color='#232323'
 color-shading-type='solid'
 
 [org.cinnamon.desktop.interface]
 font-name='Inter 11'
-cursor-theme='dct-cursors'
-icon-theme='Papirus-Dark'
-gtk-theme='dct-gtk'
+cursor-theme='Yaru'
+icon-theme='Yaru-purple-dark'
+gtk-theme='Yaru-purple-dark'
 clock-use-24h=false
 # Muffin composites unconditionally. Turning the effects off is the single
 # biggest win on a Pentium iGPU.
 enable-animations=false
 
+# Panel, menu and applet chrome (cinnamon.css), not GTK widgets.
+[org.cinnamon.theme]
+name='Yaru-purple-dark'
+symbolic-relative-size=1.0
+
+# Window borders. Yaru-purple-dark ships no metacity-1 theme, so the borders
+# are Yaru-dark's — gray, which is half the palette anyway.
+[org.cinnamon.desktop.wm.preferences]
+theme='Yaru-dark'
+titlebar-font='Inter Bold 11'
+
 [org.cinnamon.desktop.session]
 idle-delay=uint32 600
 
 [org.cinnamon.desktop.sound]
-theme-name='dct'
+theme-name='Yaru'
 
 [org.cinnamon.desktop.privacy]
 remember-recent-files=false
@@ -93,12 +114,23 @@ desktop-effects-on-dialogs=false
 desktop-effects-on-menus=false
 desktop-effects-workspace=false
 
-# LightDM greeter (slick-greeter reads the x.dm.slick-greeter schema; the
-# package ships no /etc/lightdm/slick-greeter.conf on 24.04).
+# ---------------------------------------------------------------------------
+# LightDM greeter (slick-greeter).
+#
+# slick-greeter reads this schema, then overlays /etc/lightdm/slick-greeter.conf
+# on top of it at every start (UGSettings.apply_conf_settings in the 2.0.1
+# source). The image ships both: the schema is the default, the conf file is
+# the explicit greeter policy. Keep the two in sync.
+# ---------------------------------------------------------------------------
 [x.dm.slick-greeter]
 logo='/usr/share/pixmaps/dct-logo.png'
-background='/usr/share/backgrounds/dct/dct-lock.png'
-background-color='#071A33'
+background='/usr/share/backgrounds/dct/dct-greeter.png'
+background-color='#2E2E2E'
 draw-user-backgrounds=false
-font-name='Inter 11'
+draw-grid=false
 show-hostname=false
+theme-name='Yaru-purple-dark'
+icon-theme-name='Yaru-purple-dark'
+cursor-theme-name='Yaru'
+cursor-theme-size=24
+font-name='Inter 11'

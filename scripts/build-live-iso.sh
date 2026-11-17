@@ -397,8 +397,9 @@ ok "unmounted the layers"
 # ---------------------------------------------------------------------------
 # 3b. Desktop extras the stock live layer does not carry
 #
-# The gschema override asks for Papirus-Dark and Inter. Without the packages
-# the desktop silently falls back to Adwaita, which reads as "half-branded".
+# The theme itself (Yaru-purple-dark, Yaru icons/cursors/sounds) ships in the
+# Ubuntu Cinnamon base, so only the fonts are missing. Without them the desktop
+# silently falls back to a generic sans, which reads as "half-branded".
 # ---------------------------------------------------------------------------
 if [ "$EXTRAS_PKGS" -eq 1 ]; then
     say "installing desktop extras"
@@ -407,9 +408,9 @@ if [ "$EXTRAS_PKGS" -eq 1 ]; then
             apt-get update -qq >"$LOGDIR/apt-extras-update.log" 2>&1; then
         if chroot "$ROOTFS" env DEBIAN_FRONTEND=noninteractive \
                 apt-get install -y --no-install-recommends \
-                papirus-icon-theme fonts-inter fonts-jetbrains-mono \
+                fonts-inter fonts-jetbrains-mono \
                 >"$LOGDIR/apt-extras.log" 2>&1; then
-            ok "papirus icons + Inter / JetBrains Mono installed"
+            ok "Inter / JetBrains Mono installed"
         else
             warn "extras install failed — desktop falls back to Adwaita (see $LOGDIR/apt-extras.log)"
         fi

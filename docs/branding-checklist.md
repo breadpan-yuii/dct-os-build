@@ -35,20 +35,36 @@ Verify: reboot and watch. `sudo plymouth-set-default-theme --list`.
 
 ## Phase C — Login and desktop (✅ + 🎨)
 
+The palette is **purple + gray**, and every surface pulls its accent from
+`payload/branding/tokens.env`. The theme is Ubuntu's own `Yaru-purple-dark`,
+which ships in the base and carries exactly `#7764D8`
+(`X-Yaru-Accent-Color` in its `index.theme`). Nothing is hand-authored, so
+nothing can rot on the next Yaru update.
+
 | Item | Path | Notes |
 |---|---|---|
-| Greeter logo | `/usr/share/pixmaps/dct-logo.png` | 🎨 |
-| Greeter banner | gschema `x.dm.slick-greeter` | ✅ |
-| Wallpapers (day/dark/lock) | `/usr/share/backgrounds/dct/` | 🎨 3840×2160 |
-| GTK theme | `/usr/share/themes/dct-gtk/` | 🎨 Phase 3 work — build on Materia or Colloid, not from scratch |
-| Icon theme | `/usr/share/icons/` | `Papirus-Dark` recoloured, or ship as-is initially |
-| Cursor theme | `/usr/share/icons/dct-cursors/` | 🎨 optional |
-| Sound theme | `/usr/share/sounds/dct/` | 🎨 optional |
-| Fonts | `/usr/share/fonts/` | `Inter` + `JetBrains Mono` (OFL). ✍️ confirm with DCT brand |
-| Layout (taskbar/start menu) | GNOME extensions | ✍️ Windows-like or macOS-like? |
+| Greeter logo | `/usr/share/pixmaps/dct-logo.png` | 🎨 256×256, transparent |
+| Greeter background | `/usr/share/backgrounds/dct/dct-greeter.png` | 🎨 purple→gray 3840×2160 |
+| Greeter policy | `/etc/lightdm/slick-greeter.conf` | ✅ wins over the schema at every start |
+| Greeter defaults | gschema `x.dm.slick-greeter` | ✅ kept in sync with the conf |
+| Wallpapers (day/dark/lock/greeter) | `/usr/share/backgrounds/dct/` | 🎨 3840×2160 |
+| GTK theme | `/usr/share/themes/Yaru-purple-dark/` | ✅ ships in the base |
+| Icon theme | `/usr/share/icons/Yaru-purple-dark/` | ✅ ships in the base |
+| Cursor theme | `/usr/share/icons/Yaru/` | ✅ ships in the base |
+| Window borders | `/usr/share/themes/Yaru-dark/` | ✅ only Yaru theme with `metacity-1/` |
+| Sound theme | `/usr/share/sounds/Yaru/` | ✅ ships in the base |
+| Fonts | `/usr/share/fonts/` | `Inter` + `JetBrains Mono` (OFL), installed by the build |
+| Layout (taskbar/start menu) | Cinnamon panel | ✍️ Windows-like or macOS-like? |
 
-Until `dct-gtk` exists, `apply-branding.sh` warns and falls back to
-`Adwaita-dark` so the desktop is never half-broken.
+`apply-branding.sh` checks every theme name in the override **section-aware**
+(`theme-name` is the GTK theme in the greeter but the sound theme in a
+`.sound` section, and the Cinnamon wm theme needs `metacity-1/`). A missing
+theme falls back to Adwaita/freedesktop and prints a warning instead of
+silently producing a half-branded desktop.
+
+Do **not** reintroduce `dct-gtk`, `dct-cursors` or `dct` sound themes. They
+were removed on purpose: they duplicated upstream themes for no visual gain
+and broke on every Yaru release.
 
 ## Phase D — Applications (✍️)
 
@@ -68,8 +84,8 @@ Until `dct-gtk` exists, `apply-branding.sh` warns and falls back to
 | Item | Path |
 |---|---|
 | Calamares branding | `/etc/calamares/branding/dct/` |
-| Product name/URLs | `branding.desc` |
-| Colours | `stylesheet.qss` |
+| Product name/URLs | `branding.desc` — rendered from `payload/branding/tokens.env` |
+| Colours | `stylesheet.qss` + `branding.desc` — rendered from `tokens.env` |
 | Slideshow | not shipped — add later, a broken `show.qml` crashes the installer |
 
 ## Phase F — Classroom operations (✍️)

@@ -47,17 +47,61 @@ if [ -r "$T/etc/dct-os-release" ] && grep -q 'BUILD_KIND="live-remaster"' "$T/et
     LIVE=1
 fi
 
-# Check that a theme named in the GSettings override actually exists on disk.
-# GSettings silently accepts a missing theme and you get a half-branded desktop.
-check_theme() {                                   # key dir
-    local key="$1" dir="$2" val
-    val="$(sed -n "s/^${key}='\(.*\)'/\1/p" "$OVR" 2>/dev/null | head -1)"
-    [ -n "$val" ] || return 0
-    if [ -d "$T$dir/$val" ]; then
-        p "$key '$val' exists"
-    else
-        f "$key '$val' missing at $dir/$val — desktop will look unbranded"
-    fi
+# Check that every theme named in the GSettings override actually exists on
+# disk. GSettings silently accepts a missing theme and you get a half-branded
+# desktop. Section-aware: `theme-name` is the GTK theme in the greeter section
+# but the *sound* theme in a *.sound section, and the Cinnamon wm theme needs a
+# metacity-1/ directory.
+schema_rows() {                                   # file -> section|key|value
+    awk -F'[][]' '
+        /^\[/ { sec=$2; next }
+        /^[A-Za-z0-9_.-]+=/ {
+            eq=index($0,"=")
+            key=substr($0,1,eq-1)
+            val=substr($0,eq+1)
+            q=sprintf("%c",39)
+            gsub("^" q "|" q "$","",val)
+            print sec "|" key "|" val
+        }' "$1"
+}
+
+check_themes() {
+    local section key val kind dir suffix
+    while IFS='|' read -r section key val; do
+        [ -n "$key" ] || continue
+        case "$section:$key" in
+            x.dm.slick-greeter:theme-name)        kind=gtk ;;
+            x.dm.slick-greeter:icon-theme-name)   kind=icon ;;
+            x.dm.slick-greeter:cursor-theme-name) kind=cursor ;;
+            *:gtk-theme)                          kind=gtk ;;
+            *:icon-theme)                         kind=icon ;;
+            *:cursor-theme)                       kind=cursor ;;
+            *.sound:theme-name)                   kind=sound ;;
+            org.cinnamon.theme:name)              kind=shell ;;
+            org.cinnamon.desktop.wm.preferences:theme) kind=wm ;;
+            *) continue ;;
+        esac
+        case "$kind" in
+            gtk)    dir=/usr/share/themes;  suffix= ;;
+            shell)  dir=/usr/share/themes;  suffix=/cinnamon/cinnamon.css ;;
+            wm)     dir=/usr/share/themes;  suffix=/metacity-1 ;;
+            icon)   dir=/usr/share/icons;   suffix= ;;
+            cursor) dir=/usr/share/icons;   suffix=/cursors ;;
+            sound)  dir=/usr/share/sounds;  suffix= ;;
+        esac
+        if [ -e "$T$dir/$val$suffix" ]; then
+            p "$kind theme '$val' exists ([$section] $key)"
+        else
+            f "$kind theme '$val' missing at $dir/$val$suffix — desktop will look unbranded"
+        fi
+    done < <(schema_rows "$OVR")
+}
+
+hex_rgb_float() {                                 # rrggbb -> "0.467, 0.392, 0.847"
+    local h="$1"
+    local r=$((16#${h:0:2})) g=$((16#${h:2:2})) b=$((16#${h:4:2}))
+    awk -v r="$r" -v g="$g" -v b="$b" \
+        'BEGIN { printf "%.3f, %.3f, %.3f", r/255, g/255, b/255 }'
 }
 
 echo "== identity =="
@@ -161,9 +205,7 @@ OVR="$T/usr/share/glib-2.0/schemas/99_dct-os.gschema.override"
 if [ -r "$OVR" ]; then
     p "GSettings override installed"
 
-    check_theme gtk-theme    /usr/share/themes
-    check_theme cursor-theme /usr/share/icons
-    check_theme icon-theme   /usr/share/icons
+    check_themes
 
     wallpaper="$(sed -n "s/^picture-uri='file:\/\/\(.*\)'/\1/p" "$OVR" | head -1)"
     if [ -n "$wallpaper" ]; then
@@ -190,6 +232,92 @@ if exists "/usr/share/pixmaps/dct-logo.png"; then
     esac
 else
     w "no /usr/share/pixmaps/dct-logo.png"
+fi
+
+echo "== greeter =="
+GC="$T/etc/lightdm/slick-greeter.conf"
+conf_val() { sed -n "s/^$1=//p" "$GC" 2>/dev/null | head -1; }
+schema_val() {                                    # key in [x.dm.slick-greeter]
+    awk -v want="$1" -F'[][]' '
+        /^\[/ { sec=$2; next }
+        sec=="x.dm.slick-greeter" && index($0, want "=")==1 {
+            v=substr($0, length(want)+2)
+            q=sprintf("%c",39); gsub("^" q "|" q "$","",v); print v; exit
+        }' "$OVR" 2>/dev/null
+}
+if [ -r "$GC" ]; then
+    p "slick-greeter policy installed (/etc/lightdm/slick-greeter.conf)"
+
+    gbg="$(conf_val background)"
+    if [ -n "$gbg" ]; then
+        exists "$gbg" && p "greeter background present ($gbg)" \
+            || f "greeter background $gbg is missing — login falls back to a flat colour"
+    else
+        f "greeter has no background key"
+    fi
+
+    glogo="$(conf_val logo)"
+    if [ -n "$glogo" ]; then
+        exists "$glogo" && p "greeter logo present" \
+            || f "greeter logo $glogo is missing"
+    fi
+
+    gt="$(conf_val theme-name)"
+    if [ -n "$gt" ]; then
+        [ -d "$T/usr/share/themes/$gt" ] && p "greeter GTK theme '$gt' exists" \
+            || f "greeter GTK theme '$gt' is missing"
+    fi
+    gi="$(conf_val icon-theme-name)"
+    if [ -n "$gi" ]; then
+        [ -d "$T/usr/share/icons/$gi" ] && p "greeter icon theme '$gi' exists" \
+            || f "greeter icon theme '$gi' is missing"
+    fi
+    gcur="$(conf_val cursor-theme-name)"
+    if [ -n "$gcur" ]; then
+        [ -d "$T/usr/share/icons/$gcur/cursors" ] && p "greeter cursor theme '$gcur' exists" \
+            || f "greeter cursor theme '$gcur' is missing"
+    fi
+
+    # The conf file overwrites the greeter's dconf every start, so a drift from
+    # the schema means the schema is a lie. Both must say the same thing.
+    drift=""
+    for k in background background-color logo theme-name icon-theme-name \
+             cursor-theme-name font-name draw-user-backgrounds draw-grid \
+             show-hostname; do
+        cv="$(conf_val "$k")"; sv="$(schema_val "$k")"
+        [ -n "$cv" ] || continue
+        [ "$cv" = "$sv" ] || drift="$drift $k"
+    done
+    [ -z "$drift" ] && p "greeter conf matches the schema defaults" \
+        || w "greeter conf/schema drift:$drift (conf wins at runtime)"
+else
+    w "no /etc/lightdm/slick-greeter.conf — greeter uses the schema defaults only"
+fi
+
+echo "== splash / theme colours =="
+# Every rendered template must have had its @DCT_*@ placeholders substituted.
+for tpl in /boot/grub/themes/dct/theme.txt \
+           /usr/share/plymouth/themes/dct/dct.script \
+           /etc/calamares/branding/dct/branding.desc \
+           /etc/calamares/branding/dct/stylesheet.qss; do
+    [ -r "$T$tpl" ] || continue
+    if grep -q '@DCT_' "$T$tpl"; then
+        f "unreplaced @DCT_ placeholder in $tpl"
+    else
+        p "colours rendered in ${tpl##*/} (no placeholders left)"
+    fi
+done
+
+PS="$T/usr/share/plymouth/themes/dct/dct.script"
+if [ -r "$PS" ] && [ -n "${DCT_PURPLE_DEEP:-}" ] && [ -n "${DCT_GRAY_DARK:-}" ]; then
+    want_top="$(hex_rgb_float "$DCT_PURPLE_DEEP")"
+    want_bottom="$(hex_rgb_float "$DCT_GRAY_DARK")"
+    grep -qF "SetBackgroundTopColor($want_top)" "$PS" \
+        && p "plymouth top colour matches tokens (#$DCT_PURPLE_DEEP)" \
+        || f "plymouth top colour is not #$DCT_PURPLE_DEEP"
+    grep -qF "SetBackgroundBottomColor($want_bottom)" "$PS" \
+        && p "plymouth bottom colour matches tokens (#$DCT_GRAY_DARK)" \
+        || f "plymouth bottom colour is not #$DCT_GRAY_DARK"
 fi
 
 echo "== upgrade resilience =="

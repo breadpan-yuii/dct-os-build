@@ -1,8 +1,9 @@
-# Dominican OS plymouth splash. Colours must match tokens.env.
+# Dominican OS plymouth splash. Colours are rendered from tokens.env by
+# apply-branding.sh (the DCT_* tokens), so edit the tokens, not this file.
 # Tested shape; verify visually with: sudo plymouthd --debug ; sudo plymouth --show-splash
 
-Window.SetBackgroundTopColor(0.043, 0.102, 0.200);    # #0B2545
-Window.SetBackgroundBottomColor(0.027, 0.102, 0.200); # #071A33
+Window.SetBackgroundTopColor(@DCT_PURPLE_DEEP_RGB@);    # DCT purple-deep
+Window.SetBackgroundBottomColor(@DCT_GRAY_DARK_RGB@);   # DCT gray-dark
 
 logo_image = Image("logo.png");
 logo_sprite = Sprite(logo_image);

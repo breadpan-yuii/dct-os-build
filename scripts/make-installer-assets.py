@@ -47,10 +47,26 @@ from PIL import Image
 REPO = Path(__file__).resolve().parent.parent
 SRC = REPO / "payload" / "assets" / "dct-logo.png"
 OUT = REPO / "payload" / "installer"
+TOKENS = REPO / "payload" / "branding" / "tokens.env"
 
-NAVY = "#0B2545"
-NAVY_DEEP = "#071A33"
-WHITE = "#FFFFFF"
+
+def token(name: str) -> str:
+    """Read one DCT_* value from tokens.env — the single source of colour."""
+    for line in TOKENS.read_text().splitlines():
+        line = line.split("#", 1)[0].strip()
+        if line.startswith(name + "="):
+            return line.split("=", 1)[1].strip().strip('"')
+    raise SystemExit(f"{name} not found in {TOKENS}")
+
+
+def rgb(hex6: str) -> tuple[int, int, int]:
+    return tuple(int(hex6[i:i + 2], 16) for i in (0, 2, 4))  # type: ignore[return-value]
+
+
+PURPLE = "#" + token("DCT_PURPLE")
+PURPLE_DEEP = "#" + token("DCT_PURPLE_DEEP")
+GRAY_DARK = "#" + token("DCT_GRAY_DARK")
+WHITE = "#" + token("DCT_WHITE")
 
 SUPERSAMPLE = 4          # trace resolution multiplier
 INK_THRESHOLD = 150      # gray level below which a pixel is seal ink
@@ -171,13 +187,13 @@ def main() -> None:
 
     OUT.mkdir(parents=True, exist_ok=True)
 
-    (OUT / "logo-light.svg").write_text(svg(190, 66, mark(d, NAVY, 190, 66, 0.96)))
+    (OUT / "logo-light.svg").write_text(svg(190, 66, mark(d, PURPLE, 190, 66, 0.96)))
     (OUT / "logo-dark.svg").write_text(svg(190, 66, mark(d, WHITE, 190, 66, 0.96)))
 
     defs = (
         '<defs><linearGradient id="dct" x1="450" y1="0" x2="450" y2="901" '
         'gradientUnits="userSpaceOnUse">'
-        f'<stop stop-color="{NAVY}"/><stop offset="1" stop-color="{NAVY_DEEP}"/>'
+        f'<stop stop-color="{PURPLE}"/><stop offset="1" stop-color="{PURPLE_DEEP}"/>'
         "</linearGradient></defs>"
     )
     (OUT / "mascot.svg").write_text(
@@ -187,14 +203,14 @@ def main() -> None:
             defs)
     )
     (OUT / "mascot_no_background.svg").write_text(
-        svg(900, 901, mark(d, NAVY, 900, 901, 0.60))
+        svg(900, 901, mark(d, PURPLE, 900, 901, 0.60))
     )
 
-    # Launcher icon: the seal knocked out of a navy disc, so it reads at 48px.
+    # Launcher icon: the seal knocked out of a purple disc, so it reads at 48px.
     icon_defs = (
         '<defs><linearGradient id="dct" x1="96" y1="0" x2="96" y2="192" '
         'gradientUnits="userSpaceOnUse">'
-        f'<stop stop-color="{NAVY}"/><stop offset="1" stop-color="{NAVY_DEEP}"/>'
+        f'<stop stop-color="{PURPLE}"/><stop offset="1" stop-color="{PURPLE_DEEP}"/>'
         "</linearGradient></defs>"
     )
     (OUT / "dct-os.svg").write_text(
@@ -208,7 +224,8 @@ def main() -> None:
     # near Ubuntu's (mean ~0.85 / ~0.18) so the app's text stays readable.
     # Names match the snap's own files (light-theme.png, not theme-light.png).
     gradient_png(OUT / "light-theme.png", (0xF7, 0xF9, 0xFC), (0xE1, 0xE8, 0xF3))
-    gradient_png(OUT / "dark-theme.png", (0x0B, 0x25, 0x45), (0x07, 0x1A, 0x33))
+    gradient_png(OUT / "dark-theme.png", rgb(token("DCT_PURPLE_DEEP")),
+                 rgb(token("DCT_GRAY_DARK")))
 
     for f in sorted(OUT.iterdir()):
         if f.is_file():

@@ -96,10 +96,21 @@ install_file() {                       # src dst [mode]
     run install -D -m "$mode" "$src" "$T$dst"
 }
 
-# Install a file, substituting the identity tokens from tokens.env. The
-# payload templates are the only place the product name is spelled out; this
-# keeps the name in one file instead of drifting across os-release, issue,
-# motd and lsb-release.
+# 7764D8 -> "0.467, 0.392, 0.847". Plymouth's script is Lua and wants floats.
+hex_rgb_float() {                      # rrggbb
+    local h="$1"
+    local r=$((16#${h:0:2})) g=$((16#${h:2:2})) b=$((16#${h:4:2}))
+    awk -v r="$r" -v g="$g" -v b="$b" \
+        'BEGIN { printf "%.3f, %.3f, %.3f", r/255, g/255, b/255 }'
+}
+
+# Install a file, substituting the identity and palette tokens from
+# tokens.env. The payload templates are the only place the product name or a
+# brand colour is spelled out; this keeps both in one file instead of drifting
+# across os-release, GRUB, plymouth and the installer.
+#
+# @DCT_PURPLE@       -> #7764D8   (CSS / GRUB / QSS: hash included)
+# @DCT_PURPLE_RGB@   -> 0.467, 0.392, 0.847   (plymouth Lua)
 render_file() {                        # src dst
     local src="$1" dst="$2" tmp
     [ -e "$src" ] || { warn "missing source $src — skipped"; return 0; }
@@ -121,6 +132,19 @@ render_file() {                        # src dst
         -e "s|@DCT_VENDOR@|$DCT_VENDOR|g" \
         -e "s|@DCT_HOME_URL@|$DCT_HOME_URL|g" \
         -e "s|@DCT_SUPPORT_URL@|$DCT_SUPPORT_URL|g" \
+        -e "s|@DCT_PURPLE@|#$DCT_PURPLE|g" \
+        -e "s|@DCT_PURPLE_DEEP@|#$DCT_PURPLE_DEEP|g" \
+        -e "s|@DCT_PURPLE_LIGHT@|#$DCT_PURPLE_LIGHT|g" \
+        -e "s|@DCT_GRAY@|#$DCT_GRAY|g" \
+        -e "s|@DCT_GRAY_DARK@|#$DCT_GRAY_DARK|g" \
+        -e "s|@DCT_GRAY_MID@|#$DCT_GRAY_MID|g" \
+        -e "s|@DCT_GRAY_LIGHT@|#$DCT_GRAY_LIGHT|g" \
+        -e "s|@DCT_WHITE@|#$DCT_WHITE|g" \
+        -e "s|@DCT_TEXT_MUTED@|#$DCT_TEXT_MUTED|g" \
+        -e "s|@DCT_PURPLE_RGB@|$(hex_rgb_float "$DCT_PURPLE")|g" \
+        -e "s|@DCT_PURPLE_DEEP_RGB@|$(hex_rgb_float "$DCT_PURPLE_DEEP")|g" \
+        -e "s|@DCT_GRAY_RGB@|$(hex_rgb_float "$DCT_GRAY")|g" \
+        -e "s|@DCT_GRAY_DARK_RGB@|$(hex_rgb_float "$DCT_GRAY_DARK")|g" \
         "$src" > "$tmp"
     chmod 0644 "$tmp"
     mv -f -- "$tmp" "$T$dst"
@@ -231,7 +255,7 @@ branding_grub() {
     say "grub"
 
     run install -d -m 0755 "$T/boot/grub/themes/dct"
-    install_file "$PAYLOAD/grub/theme/theme.txt" /boot/grub/themes/dct/theme.txt
+    render_file "$PAYLOAD/grub/theme/theme.txt" /boot/grub/themes/dct/theme.txt
 
     if [ -f "$PAYLOAD/assets/background.png" ]; then
         install_file "$PAYLOAD/assets/background.png" \
@@ -276,7 +300,7 @@ branding_plymouth() {
     local d="$T/usr/share/plymouth/themes/dct"
     run install -d -m 0755 "$d"
     install_file "$PAYLOAD/plymouth/dct/dct.plymouth" /usr/share/plymouth/themes/dct/dct.plymouth
-    install_file "$PAYLOAD/plymouth/dct/dct.script"   /usr/share/plymouth/themes/dct/dct.script
+    render_file  "$PAYLOAD/plymouth/dct/dct.script"   /usr/share/plymouth/themes/dct/dct.script
 
     if [ -f "$PAYLOAD/assets/logo.png" ]; then
         install_file "$PAYLOAD/assets/logo.png" /usr/share/plymouth/themes/dct/logo.png
@@ -335,22 +359,101 @@ branding_defaults() {
 
 # GSettings will happily point at a theme that does not exist, and you get a
 # half-branded desktop with no error message. Guard against it explicitly.
+#
+# The check is section-aware on purpose: `theme-name` means the GTK theme in
+# [x.dm.slick-greeter] but the *sound* theme in a *.sound section, and
+# `theme` in [org.cinnamon.desktop.wm.preferences] is a window-border theme
+# that additionally needs a metacity-1/ directory.
+theme_exists() {                       # kind name
+    local kind="$1" name="$2"
+    case "$kind" in
+        gtk)    [ -d "$T/usr/share/themes/$name" ] ;;
+        shell)  [ -f "$T/usr/share/themes/$name/cinnamon/cinnamon.css" ] ;;
+        wm)     [ -d "$T/usr/share/themes/$name/metacity-1" ] ;;
+        icon)   [ -d "$T/usr/share/icons/$name" ] ;;
+        cursor) [ -d "$T/usr/share/icons/$name/cursors" ] ;;
+        sound)  [ -d "$T/usr/share/sounds/$name" ] ;;
+        *)      return 1 ;;
+    esac
+}
+
+theme_fallback() {                     # kind
+    case "$1" in
+        gtk)    echo "Adwaita-dark" ;;
+        shell)  # Cinnamon's own shell theme, if the base still ships it.
+                if [ -f "$T/usr/share/themes/Yaru-cinnamon-dark/cinnamon/cinnamon.css" ]; then
+                    echo "Yaru-cinnamon-dark"
+                else
+                    echo "Adwaita"
+                fi ;;
+        wm)     echo "Adwaita" ;;
+        icon)   echo "Adwaita" ;;
+        cursor) echo "Adwaita" ;;
+        sound)  echo "freedesktop" ;;
+    esac
+}
+
 fix_theme_fallbacks() {
     local f="$T/usr/share/glib-2.0/schemas/99_dct-os.gschema.override"
     [ -f "$f" ] || return 0
 
-    if [ ! -d "$T/usr/share/themes/dct-gtk" ]; then
-        warn "GTK theme 'dct-gtk' not installed — falling back to Adwaita-dark"
-        warn "  (theme work is Phase 3; see docs/branding-checklist.md)"
-        run sed -i "s/^gtk-theme=.*/gtk-theme='Adwaita-dark'/" "$f"
+    local section key value kind fallback missing=0
+    while IFS='|' read -r section key value; do
+        [ -n "$key" ] || continue
+        case "$section:$key" in
+            x.dm.slick-greeter:theme-name)        kind=gtk ;;
+            x.dm.slick-greeter:icon-theme-name)   kind=icon ;;
+            x.dm.slick-greeter:cursor-theme-name) kind=cursor ;;
+            *:gtk-theme)                          kind=gtk ;;
+            *:icon-theme)                         kind=icon ;;
+            *:cursor-theme)                       kind=cursor ;;
+            *.sound:theme-name)                   kind=sound ;;
+            org.cinnamon.theme:name)              kind=shell ;;
+            org.cinnamon.desktop.wm.preferences:theme) kind=wm ;;
+            *) continue ;;
+        esac
+        theme_exists "$kind" "$value" && continue
+
+        fallback="$(theme_fallback "$kind")"
+        warn "$kind theme '$value' not installed — falling back to '$fallback'"
+        warn "  (set in [$section] $key; see docs/branding-checklist.md)"
+        missing=1
+        run sed -i "s|^${key}='${value}'$|${key}='${fallback}'|" "$f"
+    done < <(awk -F'[][]' '
+        /^\[/ { sec=$2; next }
+        /^[A-Za-z0-9_.-]+=/ {
+            eq=index($0,"=")
+            key=substr($0,1,eq-1)
+            val=substr($0,eq+1)
+            q=sprintf("%c",39)
+            gsub("^" q "|" q "$","",val)
+            print sec "|" key "|" val
+        }' "$f")
+    [ "$missing" -eq 0 ] && ok "every theme named in the override exists"
+    return 0
+}
+
+# ---------------------------------------------------------------------------
+# 4b. LightDM greeter policy
+#
+# slick-greeter 2.0.1 reads the x.dm.slick-greeter schema, then
+# UGSettings.apply_conf_settings() loads /etc/lightdm/slick-greeter.conf and
+# writes those keys into the greeter's dconf on every start (keys absent from
+# the file are reset to schema values). So this file — not the schema — is the
+# greeter's real policy. Both are shipped and kept in sync.
+# ---------------------------------------------------------------------------
+branding_greeter() {
+    say "greeter"
+    if [ ! -d "$T/etc/lightdm" ] && [ "$DRY" -eq 0 ]; then
+        warn "no /etc/lightdm — greeter config skipped (lightdm not installed?)"
+        return 0
     fi
-    if [ ! -d "$T/usr/share/icons/dct-cursors" ]; then
-        warn "cursor theme 'dct-cursors' not installed — falling back to Adwaita"
-        run sed -i "s/^cursor-theme=.*/cursor-theme='Adwaita'/" "$f"
-    fi
-    if [ ! -d "$T/usr/share/sounds/dct" ]; then
-        warn "sound theme 'dct' not installed — falling back to freedesktop"
-        run sed -i "s/^theme-name=.*/theme-name='freedesktop'/" "$f"
+    install_file "$PAYLOAD/greeter/slick-greeter.conf" \
+                 /etc/lightdm/slick-greeter.conf
+    if [ -f "$PAYLOAD/assets/dct-greeter.png" ]; then
+        ok "greeter: purple/gray backdrop + Yaru-purple-dark widgets"
+    else
+        warn "no payload/assets/dct-greeter.png — greeter shows background-color only"
     fi
 }
 
@@ -362,7 +465,7 @@ branding_artwork() {
     run install -d -m 0755 "$T/usr/share/backgrounds/dct"
 
     local n=0 f
-    for f in dct-default.png dct-default-dark.png dct-lock.png; do
+    for f in dct-default.png dct-default-dark.png dct-lock.png dct-greeter.png; do
         if [ -f "$PAYLOAD/assets/$f" ]; then
             install_file "$PAYLOAD/assets/$f" "/usr/share/backgrounds/dct/$f"
             n=$((n + 1))
@@ -395,10 +498,10 @@ branding_calamares() {
     fi
     say "calamares"
     run install -d -m 0755 "$T/etc/calamares/branding/dct"
-    install_file "$PAYLOAD/calamares/branding/dct/branding.desc" \
-                 /etc/calamares/branding/dct/branding.desc
-    install_file "$PAYLOAD/calamares/branding/dct/stylesheet.qss" \
-                 /etc/calamares/branding/dct/stylesheet.qss
+    render_file "$PAYLOAD/calamares/branding/dct/branding.desc" \
+                /etc/calamares/branding/dct/branding.desc
+    render_file "$PAYLOAD/calamares/branding/dct/stylesheet.qss" \
+                /etc/calamares/branding/dct/stylesheet.qss
     if [ -f "$PAYLOAD/assets/dct-logo.png" ]; then
         install_file "$PAYLOAD/assets/dct-logo.png" \
                      /etc/calamares/branding/dct/logo.png
@@ -497,6 +600,7 @@ main() {
     branding_identity
     branding_artwork
     branding_defaults
+    branding_greeter
     branding_grub
     branding_plymouth
     branding_calamares

@@ -1,6 +1,7 @@
 /* Dominican OS — Calamares stylesheet.
    Install to /etc/calamares/branding/dct/stylesheet.qss
-   Colours mirror payload/branding/tokens.env.
+   Colours are rendered from payload/branding/tokens.env by apply-branding.sh
+   (the DCT_* tokens) — edit the tokens, not the hex.
    Qt stylesheets are limited; keep selectors defensive — an unknown widget
    is ignored, but a malformed rule kills the whole sheet. */
 
@@ -10,55 +11,55 @@ QWidget {
 }
 
 #mainApp {
-    background-color: #0B2545;
+    background-color: @DCT_PURPLE_DEEP@;
 }
 
 #sidebarApp {
-    background-color: #071A33;
+    background-color: @DCT_GRAY_DARK@;
 }
 
 QLabel {
-    color: #FFFFFF;
+    color: @DCT_WHITE@;
 }
 
 QLabel#headerLabel {
-    color: #F2C14E;
+    color: @DCT_PURPLE_LIGHT@;
     font-size: 14pt;
     font-weight: bold;
 }
 
 QLineEdit, QComboBox, QSpinBox, QPlainTextEdit {
-    background-color: #FFFFFF;
-    color: #0B2545;
-    border: 1px solid #B8C4D9;
+    background-color: @DCT_WHITE@;
+    color: @DCT_PURPLE_DEEP@;
+    border: 1px solid @DCT_TEXT_MUTED@;
     border-radius: 4px;
     padding: 4px;
 }
 
 QPushButton {
-    background-color: #13315C;
-    color: #FFFFFF;
+    background-color: @DCT_PURPLE@;
+    color: @DCT_WHITE@;
     border: none;
     border-radius: 4px;
     padding: 6px 18px;
 }
 
 QPushButton:hover {
-    background-color: #1B4079;
+    background-color: @DCT_PURPLE_DEEP@;
 }
 
 QPushButton:disabled {
-    background-color: #3A4A66;
-    color: #B8C4D9;
+    background-color: @DCT_GRAY_MID@;
+    color: @DCT_TEXT_MUTED@;
 }
 
 QProgressBar {
-    border: 1px solid #B8C4D9;
+    border: 1px solid @DCT_TEXT_MUTED@;
     border-radius: 4px;
     text-align: center;
-    color: #FFFFFF;
+    color: @DCT_WHITE@;
 }
 
 QProgressBar::chunk {
-    background-color: #F2C14E;
+    background-color: @DCT_PURPLE_LIGHT@;
 }

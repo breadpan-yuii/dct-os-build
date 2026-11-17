@@ -20,7 +20,8 @@ OUT="$REPO/demo/mockups"
 SRC="$REPO/payload/assets/source"
 mkdir -p "$WORK" "$OUT"
 
-NAVY="#$DCT_NAVY"; DEEP="#$DCT_NAVY_DEEP"; GOLD="#$DCT_GOLD"
+PURPLE="#$DCT_PURPLE"; PURPLE_DEEP="#$DCT_PURPLE_DEEP"; PURPLE_LIGHT="#$DCT_PURPLE_LIGHT"
+GRAY="#$DCT_GRAY"; GRAY_DARK="#$DCT_GRAY_DARK"; GRAY_MID="#$DCT_GRAY_MID"; GRAY_LIGHT="#$DCT_GRAY_LIGHT"
 WHITE="#$DCT_WHITE"; MUTED="#$DCT_TEXT_MUTED"
 F="${DCT_FONT:-Inter}"
 
@@ -46,8 +47,8 @@ lockup() {   # w x y opacity
             "$x" "$y" "$w" "$h" "$op"
     else
         printf '  <g transform="translate(%s,%s) scale(%.4f)" opacity="%s">\n' "$x" "$y" "$(awk -v w="$w" 'BEGIN{print w/512}')" "$op"
-        printf '    <rect width="512" height="512" rx="96" fill="%s"/>\n' "$DEEP"
-        printf '    <text x="256" y="290" font-family="%s" font-size="140" font-weight="bold" fill="%s" text-anchor="middle">DCT</text>\n' "$F" "$GOLD"
+        printf '    <rect width="512" height="512" rx="96" fill="%s"/>\n' "$PURPLE_DEEP"
+        printf '    <text x="256" y="290" font-family="%s" font-size="140" font-weight="bold" fill="%s" text-anchor="middle">DCT</text>\n' "$F" "$PURPLE"
         printf '  </g>\n'
     fi
 }
@@ -69,11 +70,11 @@ HEAD='<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/199
     cat <<EOF
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="$DEEP"/><stop offset="100%" stop-color="#020A14"/>
+      <stop offset="0%" stop-color="$PURPLE_DEEP"/><stop offset="100%" stop-color="$GRAY_DARK"/>
     </linearGradient>
     <radialGradient id="rg" cx="0.85" cy="0.08" r="0.7">
-      <stop offset="0%" stop-color="$GOLD" stop-opacity="0.08"/>
-      <stop offset="100%" stop-color="$GOLD" stop-opacity="0"/>
+      <stop offset="0%" stop-color="$PURPLE" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="$PURPLE" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <rect width="1920" height="1080" fill="url(#g)"/>
@@ -81,13 +82,13 @@ HEAD='<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/199
 EOF
     lockup 380 150 104 1
     cat <<EOF
-  <rect x="150" y="256" width="96" height="3" fill="$GOLD"/>
+  <rect x="150" y="256" width="96" height="3" fill="$PURPLE"/>
   <text x="150" y="296" font-family="$F" font-size="16" fill="$MUTED" letter-spacing="2">$DCT_PRETTY_NAME &#183; $DCT_VENDOR</text>
 
   <!-- selected entry -->
-  <rect x="150" y="400" width="1200" height="64" rx="4" fill="$GOLD"/>
-  <text x="182" y="440" font-family="$F" font-size="26" font-weight="bold" fill="$DEEP">$DCT_PRETTY_NAME</text>
-  <text x="1290" y="440" font-family="$F" font-size="15" fill="$DEEP" text-anchor="end" opacity="0.75">GNU/Linux 6.17.0</text>
+  <rect x="150" y="400" width="1200" height="64" rx="4" fill="$PURPLE"/>
+  <text x="182" y="440" font-family="$F" font-size="26" font-weight="bold" fill="$PURPLE_DEEP">$DCT_PRETTY_NAME</text>
+  <text x="1290" y="440" font-family="$F" font-size="15" fill="$PURPLE_DEEP" text-anchor="end" opacity="0.75">GNU/Linux 6.17.0</text>
 
   <g font-family="$F" font-size="24" fill="$MUTED">
     <text x="182" y="512">$DCT_PRETTY_NAME (recovery mode)</text>
@@ -101,7 +102,7 @@ EOF
   </g>
 
   <rect x="150" y="800" width="240" height="10" rx="5" fill="$WHITE" fill-opacity="0.12"/>
-  <rect x="150" y="800" width="168" height="10" rx="5" fill="$GOLD"/>
+  <rect x="150" y="800" width="168" height="10" rx="5" fill="$PURPLE"/>
   <text x="410" y="810" font-family="$F" font-size="17" fill="$MUTED">Booting &#8216;$DCT_PRETTY_NAME&#8217; in 3 seconds&#8230;</text>
   <text x="150" y="960" font-family="$F" font-size="16" fill="$MUTED" opacity="0.7">
     Use &#8593; and &#8595; to select &#183; Enter to boot &#183; e to edit</text>
@@ -115,14 +116,14 @@ EOF
 {
     echo "$HEAD"
     cat <<EOF
-  <rect width="1920" height="1080" fill="$DEEP"/>
+  <rect width="1920" height="1080" fill="$PURPLE_DEEP"/>
 EOF
     lockup 560 680 350 1
     cat <<EOF
   <text x="960" y="660" font-family="$F" font-size="15" fill="$MUTED"
         text-anchor="middle" letter-spacing="3">STARTING</text>
   <rect x="760" y="720" width="400" height="6" rx="3" fill="$WHITE" fill-opacity="0.10"/>
-  <rect x="760" y="720" width="248" height="6" rx="3" fill="$GOLD"/>
+  <rect x="760" y="720" width="248" height="6" rx="3" fill="$PURPLE"/>
   <text x="960" y="900" font-family="$F" font-size="13" fill="$MUTED"
         text-anchor="middle" opacity="0.65">$DCT_VENDOR &#183; authorized use only</text>
 </svg>
@@ -135,19 +136,19 @@ EOF
 {
     echo "$HEAD"
     cat <<EOF
-  <rect width="1920" height="1080" fill="#0A1626"/>
+  <rect width="1920" height="1080" fill="$GRAY_DARK"/>
   <rect x="240" y="130" width="1440" height="820" rx="10" fill="$WHITE"/>
-  <rect x="240" y="130" width="400" height="820" rx="10" fill="$NAVY"/>
-  <rect x="600" y="130" width="40" height="820" fill="$NAVY"/>
+  <rect x="240" y="130" width="400" height="820" rx="10" fill="$PURPLE_DEEP"/>
+  <rect x="600" y="130" width="40" height="820" fill="$PURPLE_DEEP"/>
 EOF
     lockup 300 290 190 1
     cat <<EOF
-  <rect x="290" y="330" width="80" height="3" fill="$GOLD"/>
+  <rect x="290" y="330" width="80" height="3" fill="$PURPLE_LIGHT"/>
   <text x="290" y="368" font-family="$F" font-size="14" fill="$MUTED" letter-spacing="1">$DCT_VERSION &#183; $DCT_CODENAME</text>
 
   <g font-family="$F" font-size="17">
-    <rect x="290" y="470" width="4" height="26" fill="$GOLD"/>
-    <text x="310" y="491" fill="$GOLD" font-weight="bold">Welcome</text>
+    <rect x="290" y="470" width="4" height="26" fill="$PURPLE_LIGHT"/>
+    <text x="310" y="491" fill="$PURPLE_LIGHT" font-weight="bold">Welcome</text>
     <text x="310" y="539" fill="$MUTED">Location</text>
     <text x="310" y="587" fill="$MUTED">Keyboard</text>
     <text x="310" y="635" fill="$MUTED">Partitions</text>
@@ -156,29 +157,29 @@ EOF
     <text x="310" y="779" fill="$MUTED">Install</text>
   </g>
 
-  <text x="700" y="250" font-family="$F" font-size="34" font-weight="bold" fill="$NAVY">Welcome to $DCT_NAME</text>
-  <text x="700" y="292" font-family="$F" font-size="17" fill="#5A6B85">
+  <text x="700" y="250" font-family="$F" font-size="34" font-weight="bold" fill="$PURPLE_DEEP">Welcome to $DCT_NAME</text>
+  <text x="700" y="292" font-family="$F" font-size="17" fill="$GRAY_MID">
     This installer will guide you through installing $DCT_NAME on this computer.</text>
 
-  <g fill="#EEF2F8">
+  <g fill="#F4F4F4">
     <rect x="700" y="340" width="900" height="96" rx="6"/>
     <rect x="700" y="456" width="900" height="96" rx="6"/>
   </g>
-  <g font-family="$F" font-size="15" fill="$NAVY">
+  <g font-family="$F" font-size="15" fill="$PURPLE_DEEP">
     <text x="726" y="378" font-weight="bold">English (Philippines)</text>
-    <text x="726" y="404" fill="#5A6B85">Language for the installed system</text>
+    <text x="726" y="404" fill="$GRAY_MID">Language for the installed system</text>
     <text x="726" y="494" font-weight="bold">Asia / Manila</text>
-    <text x="726" y="520" fill="#5A6B85">Time zone and clock</text>
+    <text x="726" y="520" fill="$GRAY_MID">Time zone and clock</text>
   </g>
-  <rect x="700" y="340" width="900" height="96" rx="6" fill="none" stroke="$GOLD" stroke-width="2"/>
+  <rect x="700" y="340" width="900" height="96" rx="6" fill="none" stroke="$PURPLE" stroke-width="2"/>
 
-  <text x="700" y="620" font-family="$F" font-size="15" fill="#5A6B85">
+  <text x="700" y="620" font-family="$F" font-size="15" fill="$GRAY_MID">
     $DCT_NAME is built on Ubuntu 24.04 LTS. Not affiliated with Zorin OS or Canonical.</text>
 
-  <rect x="1290" y="860" width="150" height="46" rx="5" fill="#E3E8F0"/>
-  <text x="1365" y="889" font-family="$F" font-size="16" fill="#8A97AB" text-anchor="middle">Back</text>
-  <rect x="1452" y="860" width="150" height="46" rx="5" fill="$GOLD"/>
-  <text x="1527" y="889" font-family="$F" font-size="16" font-weight="bold" fill="$NAVY" text-anchor="middle">Next</text>
+  <rect x="1290" y="860" width="150" height="46" rx="5" fill="$GRAY_LIGHT"/>
+  <text x="1365" y="889" font-family="$F" font-size="16" fill="$GRAY_DARK" text-anchor="middle">Back</text>
+  <rect x="1452" y="860" width="150" height="46" rx="5" fill="$PURPLE"/>
+  <text x="1527" y="889" font-family="$F" font-size="16" font-weight="bold" fill="$WHITE" text-anchor="middle">Next</text>
 </svg>
 EOF
 } > "$WORK/m-installer.svg"
@@ -191,11 +192,11 @@ EOF
     cat <<EOF
   <defs>
     <linearGradient id="l" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="$NAVY"/><stop offset="100%" stop-color="#020A14"/>
+      <stop offset="0%" stop-color="$PURPLE"/><stop offset="100%" stop-color="$GRAY_DARK"/>
     </linearGradient>
     <radialGradient id="lg" cx="0.25" cy="0.85" r="0.6">
-      <stop offset="0%" stop-color="$GOLD" stop-opacity="0.16"/>
-      <stop offset="100%" stop-color="$GOLD" stop-opacity="0"/>
+      <stop offset="0%" stop-color="$PURPLE" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="$PURPLE" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <rect width="1920" height="1080" fill="url(#l)"/>
@@ -219,8 +220,8 @@ EOF
     <circle cx="814" cy="603" r="5"/><circle cx="838" cy="603" r="5"/><circle cx="862" cy="603" r="5"/>
     <circle cx="886" cy="603" r="5"/><circle cx="910" cy="603" r="5"/>
   </g>
-  <rect x="840" y="662" width="240" height="48" rx="24" fill="$GOLD"/>
-  <text x="960" y="693" font-family="$F" font-size="17" font-weight="bold" fill="$DEEP" text-anchor="middle">Sign In</text>
+  <rect x="840" y="662" width="240" height="48" rx="24" fill="$PURPLE"/>
+  <text x="960" y="693" font-family="$F" font-size="17" font-weight="bold" fill="$PURPLE_DEEP" text-anchor="middle">Sign In</text>
 
   <text x="960" y="920" font-family="$F" font-size="15" fill="$MUTED" text-anchor="middle" letter-spacing="0.5">
     $DCT_VENDOR &#8212; authorized users only. Activity is logged.</text>
@@ -238,11 +239,11 @@ EOF
     cat <<EOF
   <defs>
     <linearGradient id="d" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="$NAVY"/><stop offset="100%" stop-color="$DEEP"/>
+      <stop offset="0%" stop-color="$PURPLE"/><stop offset="100%" stop-color="$PURPLE_DEEP"/>
     </linearGradient>
     <radialGradient id="dg" cx="0.22" cy="0.82" r="0.62">
-      <stop offset="0%" stop-color="$GOLD" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="$GOLD" stop-opacity="0"/>
+      <stop offset="0%" stop-color="$PURPLE" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="$PURPLE" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <rect width="1920" height="1080" fill="url(#d)"/>
@@ -266,30 +267,30 @@ EOF
     <text x="47" y="519" font-family="$F" font-size="18" font-weight="bold" fill="$WHITE" text-anchor="middle">L</text>
     <rect x="22" y="544" width="50" height="50" rx="12" fill="#E67E22"/>
     <text x="47" y="577" font-family="$F" font-size="18" font-weight="bold" fill="$WHITE" text-anchor="middle">P</text>
-    <rect x="22" y="602" width="50" height="50" rx="12" fill="$GOLD"/>
-    <text x="47" y="635" font-family="$F" font-size="18" font-weight="bold" fill="$DEEP" text-anchor="middle">D</text>
+    <rect x="22" y="602" width="50" height="50" rx="12" fill="$PURPLE"/>
+    <text x="47" y="635" font-family="$F" font-size="18" font-weight="bold" fill="$PURPLE_DEEP" text-anchor="middle">D</text>
     <rect x="22" y="660" width="50" height="50" rx="12" fill="#4A5A73"/>
     <text x="47" y="693" font-family="$F" font-size="18" font-weight="bold" fill="$WHITE" text-anchor="middle">S</text>
   </g>
 
-  <rect x="220" y="180" width="1080" height="620" rx="10" fill="#F7F9FC" stroke="#000" stroke-opacity="0.25"/>
-  <rect x="220" y="180" width="1080" height="46" rx="10" fill="$NAVY"/>
-  <rect x="220" y="212" width="1080" height="14" fill="$NAVY"/>
+  <rect x="220" y="180" width="1080" height="620" rx="10" fill="$WHITE" stroke="#000" stroke-opacity="0.25"/>
+  <rect x="220" y="180" width="1080" height="46" rx="10" fill="$PURPLE"/>
+  <rect x="220" y="212" width="1080" height="14" fill="$PURPLE"/>
   <text x="248" y="210" font-family="$F" font-size="14" font-weight="bold" fill="$WHITE">DCT Portal</text>
   <g fill="$WHITE" fill-opacity="0.5">
     <circle cx="1268" cy="203" r="6"/><circle cx="1246" cy="203" r="6"/><circle cx="1224" cy="203" r="6"/>
   </g>
-  <rect x="240" y="242" width="1040" height="34" rx="17" fill="#E7ECF4"/>
-  <text x="262" y="264" font-family="$F" font-size="13" fill="#7A879B">https://dct.edu.ph</text>
+  <rect x="240" y="242" width="1040" height="34" rx="17" fill="#E8E6EF"/>
+  <text x="262" y="264" font-family="$F" font-size="13" fill="$GRAY_MID">https://dct.edu.ph</text>
 
-  <text x="264" y="332" font-family="$F" font-size="26" font-weight="bold" fill="$NAVY">Student Portal</text>
-  <text x="264" y="360" font-family="$F" font-size="14" fill="#5A6B85">Grades, enrolment and announcements</text>
-  <g fill="#E9EEF6">
+  <text x="264" y="332" font-family="$F" font-size="26" font-weight="bold" fill="$PURPLE">Student Portal</text>
+  <text x="264" y="360" font-family="$F" font-size="14" fill="$GRAY_MID">Grades, enrolment and announcements</text>
+  <g fill="#ECECEC">
     <rect x="264" y="392" width="320" height="150" rx="8"/>
     <rect x="604" y="392" width="320" height="150" rx="8"/>
     <rect x="944" y="392" width="316" height="150" rx="8"/>
   </g>
-  <g fill="#D3DBE8">
+  <g fill="$GRAY_LIGHT">
     <rect x="284" y="414" width="120" height="12" rx="6"/>
     <rect x="284" y="438" width="240" height="9" rx="4"/>
     <rect x="284" y="456" width="200" height="9" rx="4"/>
@@ -300,19 +301,19 @@ EOF
     <rect x="964" y="438" width="240" height="9" rx="4"/>
     <rect x="964" y="456" width="210" height="9" rx="4"/>
   </g>
-  <g fill="#EEF2F8">
+  <g fill="#F4F4F4">
     <rect x="264" y="562" width="996" height="40" rx="6"/>
     <rect x="264" y="614" width="996" height="40" rx="6"/>
     <rect x="264" y="666" width="996" height="40" rx="6"/>
   </g>
-  <g fill="#D3DBE8">
+  <g fill="$GRAY_LIGHT">
     <rect x="284" y="578" width="300" height="9" rx="4"/>
     <rect x="284" y="630" width="380" height="9" rx="4"/>
     <rect x="284" y="682" width="260" height="9" rx="4"/>
   </g>
 
-  <rect x="700" y="900" width="520" height="56" rx="28" fill="#04101F" fill-opacity="0.92"/>
-  <circle cx="732" cy="928" r="12" fill="$GOLD"/>
+  <rect x="700" y="900" width="520" height="56" rx="28" fill="$GRAY_DARK" fill-opacity="0.92"/>
+  <circle cx="732" cy="928" r="12" fill="$PURPLE"/>
   <text x="756" y="934" font-family="$F" font-size="15" fill="$WHITE">
     Welcome to $DCT_NAME &#183; $DCT_VENDOR</text>
 </svg>

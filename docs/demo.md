@@ -81,7 +81,7 @@ branded splash, the greeter with the DCT mark, and the wallpaper.
 ### Optional: install the app set, so the desktop looks real
 
 ```bash
-sudo apt install -y fonts-inter fonts-jetbrains-mono papirus-icon-theme \
+sudo apt install -y fonts-inter fonts-jetbrains-mono \
                     libreoffice-writer libreoffice-calc libreoffice-impress \
                     firefox timeshift
 ```

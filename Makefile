@@ -91,6 +91,11 @@ demo: ## regenerate branding assets + slide renders (no ISO needed)
 	@echo "  renders -> demo/mockups/   (label these 'design render')"
 	@echo "  runbook -> docs/demo.md"
 
+.PHONY: installer-assets
+installer-assets: ## re-trace installer artwork from the seal (needs uv)
+	uv run --with potracer --with pillow --with numpy \
+	    python3 scripts/make-installer-assets.py
+
 .PHONY: lint
 lint: ## bash syntax check on every script
 	@for f in scripts/*.sh; do bash -n "$$f" && echo "ok  $$f"; done

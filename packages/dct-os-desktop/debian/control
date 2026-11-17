@@ -9,7 +9,6 @@ Rules-Requires-Root: no
 Package: dct-os-desktop
 Architecture: all
 Depends: dct-os-defaults (>= 1.0),
-         papirus-icon-theme,
          fonts-inter,
          fonts-jetbrains-mono,
          libreoffice-writer,

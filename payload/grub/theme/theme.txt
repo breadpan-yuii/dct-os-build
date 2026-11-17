@@ -2,14 +2,14 @@
 # Place at /boot/grub/themes/dct/theme.txt, with background.png beside it.
 # GRUB themes are loaded from disk at runtime, so this works WITH Secure Boot on.
 
-desktop-color: "#0B2545"
+desktop-color: "@DCT_PURPLE_DEEP@"
 desktop-image: "background.png"
 title-text: ""
-title-color: "#F2C14E"
+title-color: "@DCT_PURPLE_LIGHT@"
 title-font: "DejaVu Sans Bold 16"
 message-font: "DejaVu Sans Regular 12"
-message-color: "#B8C4D9"
-message-bg-color: "#071A33"
+message-color: "@DCT_TEXT_MUTED@"
+message-bg-color: "@DCT_GRAY_DARK@"
 terminal-font: "DejaVu Sans Mono Regular 12"
 terminal-box: "terminal_box_*.png"
 
@@ -19,8 +19,8 @@ terminal-box: "terminal_box_*.png"
     width = 70%
     height = 45%
     item_font = "DejaVu Sans Regular 14"
-    item_color = "#B8C4D9"
-    selected_item_color = "#071A33"
+    item_color = "@DCT_TEXT_MUTED@"
+    selected_item_color = "@DCT_GRAY_DARK@"
     selected_item_pixmap_style = "select_*.png"
     item_height = 32
     item_padding = 8
@@ -36,7 +36,7 @@ terminal-box: "terminal_box_*.png"
     width = 100%
     align = "center"
     font = "DejaVu Sans Regular 10"
-    color = "#B8C4D9"
+    color = "@DCT_TEXT_MUTED@"
     text = "Dominican College of Tarlac  ·  Authorized use only"
 }
 
@@ -48,8 +48,8 @@ terminal-box: "terminal_box_*.png"
     height = 12
     show_text = true
     font = "DejaVu Sans Regular 10"
-    text_color = "#F2C14E"
-    fg_color = "#F2C14E"
-    bg_color = "#071A33"
-    border_color = "#F2C14E"
+    text_color = "@DCT_PURPLE_LIGHT@"
+    fg_color = "@DCT_PURPLE_LIGHT@"
+    bg_color = "@DCT_GRAY_DARK@"
+    border_color = "@DCT_PURPLE_LIGHT@"
 }
