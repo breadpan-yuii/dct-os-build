@@ -135,6 +135,16 @@ Two consequences the script has to handle:
   UUID from the rebuilt initrd and rewrites `/.disk/casper-uuid-generic` to
   match, and adds `ignore_uuid` to every `linux` line as a second line of
   defence.
+- **The UUID file must belong to the initrd actually shipped.** `.iso-work/` is
+  cached between builds, so a `/.disk/casper-uuid-generic` left by an earlier
+  build that *did* rebuild the initrd survives into a build that keeps Ubuntu's.
+  Mapping it then ships an ISO whose initrd and UUID file disagree — which is
+  exactly the "medium not found" failure, and `ignore_uuid` hides it on real GRUB
+  boots so nobody notices. The builder deletes the file at the start of the
+  initrd step, writes it only when the initrd is rebuilt, and verifies the other
+  direction too: when the initrd is Ubuntu's, the ISO's UUID must still equal the
+  base ISO's. `test-live-iso.sh --serial` deliberately omits `ignore_uuid` so this
+  class of bug fails a test instead of reaching a USB stick.
 
 `filesystem.size` is not used by the layered path; `install-sources.yaml`
 carries the size instead, and the script sets it to the total uncompressed bytes.
@@ -250,7 +260,7 @@ boots the ISO's own kernel and initrd in text mode and waits for a login prompt.
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `Unable to find a medium containing a live file system` | the initrd's `conf/uuid.conf` and the ISO's `/.disk/casper-uuid-generic` disagree | rebuild; the script re-syncs them, do not hand-edit |
+| `Unable to find a medium containing a live file system` | the initrd's `conf/uuid.conf` and the ISO's `/.disk/casper-uuid-generic` disagree — usually a stale file in the cached `.iso-work/extras/` | rebuild; the script now re-syncs in both directions, do not hand-edit |
 | Boots, then panics looking for `/casper` | layer chain broken — a renamed or missing layer file | check the build log's `layer chain:` line against `xorriso -find /casper` |
 | Boots the branded GRUB, then stock Ubuntu | branding went into the wrong layer | it must go into the base layer; check `branded content goes into:` |
 | Installed system is blank | `install-sources.yaml` points at an empty upper layer | both entries must point at the base layer |

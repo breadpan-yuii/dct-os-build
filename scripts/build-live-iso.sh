@@ -639,6 +639,13 @@ fi
 # ---------------------------------------------------------------------------
 if [ "$DO_INITRAMFS" -eq 1 ]; then
     say "rebuilding initrd"
+    # $EXTRAS is cached between builds, so a UUID file left by an earlier
+    # build that DID rebuild the initrd survives into a build that keeps
+    # Ubuntu's. Mapping that file over the image then breaks casper's medium
+    # detection ("Unable to find a medium containing a live file system"),
+    # because the initrd and /.disk disagree. Delete it up front: from here
+    # on the file exists only if this build wrote it, for the initrd it ships.
+    rm -f "$EXTRAS/.disk/casper-uuid-generic"
     KVER="$(ls -1 "$ROOTFS/lib/modules" 2>/dev/null | sort -V | tail -1)"
     if [ -z "$KVER" ]; then
         warn "no kernel in the tree — keeping Ubuntu's initrd"
@@ -879,10 +886,16 @@ for f in boot/grub/grub.cfg boot/grub/loopback.cfg casper/install-sources.yaml .
     [ -f "$EXTRAS/$f" ] && MAP+=( -map "$EXTRAS/$f" "/$f" )
 done
 
-# Keep the ISO-side medium UUID in step with the rebuilt initrd.
-if [ -f "$EXTRAS/.disk/casper-uuid-generic" ]; then
+# Keep the ISO-side medium UUID in step with the initrd actually shipped.
+# The file is written only when the initrd was rebuilt (section 5); the base
+# ISO already carries a UUID that matches Ubuntu's initrd, so in that case we
+# must leave it alone. Mapping a UUID that belongs to a different initrd is
+# what produces "Unable to find a medium containing a live file system".
+if [ "${INITRD_REBUILT:-0}" -eq 1 ] && [ -f "$EXTRAS/.disk/casper-uuid-generic" ]; then
     MAP+=( -map "$EXTRAS/.disk/casper-uuid-generic" /.disk/casper-uuid-generic )
-    ok "medium UUID mapped into the image"
+    ok "medium UUID mapped into the image ($(tr -d '[:space:]' < "$EXTRAS/.disk/casper-uuid-generic"))"
+else
+    ok "keeping Ubuntu's medium UUID (initrd not rebuilt)"
 fi
 if [ "${INITRD_REBUILT:-0}" -eq 1 ] && [ -s "$EXTRAS/$INITRD_PATH" ]; then
     MAP+=( -map "$EXTRAS/$INITRD_PATH" "/$INITRD_PATH" )
@@ -985,7 +998,10 @@ if xorriso -osirrox on -indev "$OUTISO" \
         && warn "grub.cfg still looks up the medium by uuid/label" || true
 fi
 
-# The medium UUID on the ISO must equal the one baked into the initrd.
+# The medium UUID on the ISO must equal the one baked into the initrd. If the
+# initrd was not rebuilt, the initrd is Ubuntu's, so the ISO must still carry
+# Ubuntu's UUID — anything else is a stale file leaking in from a previous
+# build. Check both directions rather than only the rebuild case.
 if [ "${INITRD_REBUILT:-0}" -eq 1 ] && [ -f "$EXTRAS/.disk/casper-uuid-generic" ]; then
     rm -f "$WORK/tmp/uuid.iso"
     xorriso -osirrox on -indev "$OUTISO" \
@@ -996,6 +1012,21 @@ if [ "${INITRD_REBUILT:-0}" -eq 1 ] && [ -f "$EXTRAS/.disk/casper-uuid-generic" 
         ok "medium UUID matches the rebuilt initrd"
     else
         warn "medium UUID mismatch (iso='$iso_uuid' initrd='$want_uuid')"; fail=1
+    fi
+else
+    rm -f "$WORK/tmp/uuid.iso" "$WORK/tmp/uuid.base"
+    xorriso -osirrox on -indev "$OUTISO" \
+        -extract /.disk/casper-uuid-generic "$WORK/tmp/uuid.iso" 2>/dev/null || true
+    xorriso -osirrox on -indev "$BASE" \
+        -extract /.disk/casper-uuid-generic "$WORK/tmp/uuid.base" 2>/dev/null || true
+    iso_uuid="$(tr -d '[:space:]' < "$WORK/tmp/uuid.iso" 2>/dev/null || true)"
+    base_uuid="$(tr -d '[:space:]' < "$WORK/tmp/uuid.base" 2>/dev/null || true)"
+    if [ -z "$base_uuid" ]; then
+        warn "base ISO has no /.disk/casper-uuid-generic — cannot check the medium UUID"
+    elif [ "$iso_uuid" = "$base_uuid" ]; then
+        ok "medium UUID still matches Ubuntu's initrd (not rebuilt)"
+    else
+        warn "medium UUID was changed (iso='$iso_uuid' base='$base_uuid') but the initrd was not rebuilt — casper will not find the medium"; fail=1
     fi
 fi
 

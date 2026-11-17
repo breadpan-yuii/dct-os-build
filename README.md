@@ -7,6 +7,18 @@ OS assets.
 > Dominican OS is built on Ubuntu Cinnamon 24.04 LTS. Not affiliated with Zorin
 > OS or Canonical.
 
+## At a glance
+
+| | |
+|---|---|
+| Product | **Dominican OS 1.0** (codename *Noble*); internal identifiers stay `dct` |
+| Base | Ubuntu Cinnamon 24.04.5 LTS — an official Ubuntu flavour, Canonical's signed boot chain intact |
+| Desktop | Cinnamon, purple + gray, from `Yaru-purple-dark` and one `tokens.env` |
+| Office | OnlyOffice (default) · LibreOffice (fallback) · Wine. Microsoft Office only from DCT's licensed media — never bundled |
+| Target hardware | Pentium-class CPU, 4 GB RAM |
+| Artefact | `dist/Dominican-OS-1.0-live-amd64.iso` — 7.53 GB, boots to a live desktop without installing |
+| Scope | Internal institutional deployment only. Not a public distribution |
+
 ---
 
 ## The mental model: five layers
@@ -21,7 +33,7 @@ packages sitting on top of an otherwise stock Ubuntu 24.04:
 | 1 | Ubuntu Cinnamon 24.04 LTS base + signed boot chain | Canonical | not in this repo |
 | 2 | `dct-os-desktop` — the app set (one metapackage) | you | `packages/dct-os-desktop/` |
 | 3 | `dct-os-defaults` — identity, theme, dconf, policies | you | `packages/dct-os-defaults/` + `payload/` |
-| 4 | ISO assembly (live-build) + Calamares branding | you | `live-build/`, `installer/` |
+| 4 | ISO assembly (live remaster, or live-build) + installer branding | you | `scripts/build-live-iso.sh`, `live-build/`, `installer/` |
 | 5 | Deployment + fleet config | you | `ansible/`, `scripts/audit-secureboot.sh` |
 
 Everything in `payload/` is **build-system agnostic**. That is the whole trick:
@@ -30,7 +42,7 @@ the same payload drives the slow reproducible live-build pipeline *and* the fast
 
 ## The dev loop (this is the part that saves you weeks)
 
-Re **never** iterate by rebuilding an ISO. An ISO build is 25–60 minutes.
+**Never** iterate by rebuilding an ISO. An ISO build is 25–60 minutes.
 
 ```
   1. Ubuntu 24.04 VM
@@ -53,7 +65,7 @@ yourself editing an ISO by hand, stop — the change belongs in `payload/`.
 |---|---|---|
 | **Branding loop** | `sudo ./scripts/apply-branding.sh` on a prepared VM | You are changing assets or theme |
 | **Live ISO** | `sudo ./scripts/build-live-iso.sh` | You need a bootable USB for a real PC, now |
-| **Boot test** | `./scripts/test-live-iso.sh` | Before writing any ISO to a stick |
+| **Boot test** | `./scripts/test-live-iso.sh --serial` (does it reach a desktop?) and `--structure` (are the parts in the image?) | Before writing any ISO to a stick |
 | **Reproducible** | `make pkgs && make iso` | Production, once branding is settled |
 
 The live ISO path remasters the official Ubuntu Cinnamon 24.04 ISO. Ubuntu
@@ -117,13 +129,30 @@ docs/            demo runbook, proposal, architecture, licensing, secure boot
 
 ## Status
 
-| | State |
+| Area | State |
 |---|---|
-| Branding layer (`payload/` + `scripts/`) | Written **and tested** against a fake root |
-| Update resilience (diversion + apt hook) | Written; verified by `--check-updates` in the ISO build |
-| Demo material (`demo/mockups/`, `payload/assets/`) | Generated from the **real DCT artwork** in `payload/assets/source/` |
-| Live ISO (remaster of Ubuntu 24.04) | Built by `scripts/build-live-iso.sh`; boot-tested by `scripts/test-live-iso.sh` |
+| Branding layer (`payload/` + `scripts/`) | Written; `apply-branding.sh` applied to the live image and `verify-branding.sh` passes with **0 failures** |
+| Theme (purple + gray) | Finalized. GTK, icons, Cinnamon shell and greeter all use `Yaru-purple-dark`; every colour comes from `payload/branding/tokens.env` |
+| Login greeter | `dct-greeter.png` + `/etc/lightdm/slick-greeter.conf`; confirmed present in the image, **not yet seen on screen** |
+| Boot | Plymouth themed and colour-checked against the tokens. GRUB menu relabelled; the live ISO's GRUB is not themed (installed systems are) |
+| Installer | Canonical's `ubuntu-desktop-bootstrap` snap, launcher renamed **Install Dominican OS**, artwork overlaid at boot. Auto-launch is masked, so the live session is try-only |
+| Live ISO | Built and boot-tested: `dist/Dominican-OS-1.0-live-amd64.iso`, 7.53 GB. Serial boot **3/3** (real casper medium detection, no `ignore_uuid`), structure **15/15**. Sum in the matching `.sha256` file |
 | Reproducible ISO (`.deb` packages, live-build) | Written, **never executed** — needs a container runtime |
+| Office stack | OnlyOffice default, LibreOffice fallback, Wine bundled. Microsoft Office installs only from DCT's licensed media, which has not been supplied, so that path is untested |
+
+**Proven:** the image boots to a live desktop — casper finds its medium, assembles
+the layer chain and hands over to systemd, with the host named `dominican`.
+Branding files are in the right paths, every theme named in the overrides exists,
+greeter policy matches the schema, plymouth colours match `tokens.env`, and the
+installer overlay unit is enabled.
+
+**Not yet proven:** how the desktop and greeter actually look, idle RAM on a
+4 GB machine, the installer window on screen, an install from the ISO, and a
+Secure Boot boot on real hardware. These need a person at a VM or a lab PC.
+
+**Open blockers:** official DCT brand hex, vector artwork and written permission
+to use the seal, and the licensed Office media. `docs/branding-checklist.md`
+lists the remaining decisions phase by phase.
 
 `make demo` regenerates every asset and render from `tokens.env`.
 

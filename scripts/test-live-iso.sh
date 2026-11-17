@@ -247,10 +247,15 @@ if [ "$DO_SERIAL" -eq 1 ]; then
             else
                 w "no casper output on the console"
             fi
-            if grep -qi 'minimal.squashfs\|filesystem.squashfs' "$TMP/serial.log" 2>/dev/null; then
-                p "casper mounted the layer chain"
+            # Ubuntu 24.04's casper does not print the squashfs filenames to
+            # the console, so grepping for them can never succeed — it produced
+            # a permanent warning that looked like a failure. casper-bottom is
+            # the step that actually assembles the overlay, and reaching
+            # userspace from that overlay is the proof it worked.
+            if grep -qi 'casper-bottom' "$TMP/serial.log" 2>/dev/null; then
+                p "casper assembled the layer chain (casper-bottom ran)"
             else
-                w "no layer mount message seen"
+                w "no casper-bottom message on the console"
             fi
 
             if [ "$found" != "userspace" ]; then
