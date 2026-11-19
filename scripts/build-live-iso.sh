@@ -487,6 +487,15 @@ for f in boot/grub/grub.cfg boot/grub/loopback.cfg casper/install-sources.yaml .
         && ok "$f" || warn "$f not in image"
 done
 
+# casper-md5check verifies this on every live boot. Extracted here, rewritten in
+# section 9 once the build knows what it changed.
+if xorriso -osirrox on -indev "$BASE" -extract /md5sum.txt "$WORK/md5sum.base" 2>/dev/null \
+   && [ -s "$WORK/md5sum.base" ]; then
+    ok "md5sum.txt extracted for rewrite ($(wc -l < "$WORK/md5sum.base") entries)"
+else
+    warn "no /md5sum.txt in the base image"
+fi
+
 # casper derives the live username and hostname from the first word of
 # /.disk/info (lowercased). Leaving "Ubuntu ..." here produces a live session
 # user and host called "ubuntu" even when everything else is branded.
@@ -931,6 +940,59 @@ done
 RM_ARGS=()
 [ ${#RM[@]} -gt 0 ] && RM_ARGS=( -rm "${RM[@]}" )
 
+# ---------------------------------------------------------------------------
+# Keep /md5sum.txt honest.
+#
+# Ubuntu ships md5sum.txt and casper-md5check verifies it on every live boot.
+# A remaster changes the squashfs, the initrd, the GRUB config and .disk/*, and
+# deletes SHA256SUMS — so the recorded hashes go stale and the checker reports
+# "errors found in N files". That is a self-inflicted defect: the image is
+# fine, its own integrity data is not. Rewrite the entries this build
+# invalidates, drop the ones for files it deletes, and leave every other entry
+# alone (those files are copied through untouched).
+# ---------------------------------------------------------------------------
+MD5SUM_MAP="$WORK/md5.map"
+MD5SUM_DROP="$WORK/md5.drop"
+if [ -s "$WORK/md5sum.base" ]; then
+    : > "$MD5SUM_MAP"
+    : > "$MD5SUM_DROP"
+    add_md5() {   # $1 = path inside the ISO (./...), $2 = the file that lands there
+        [ -f "$2" ] || return 0
+        printf '%s %s\n' "$1" "$(md5sum "$2" | cut -d' ' -f1)" >> "$MD5SUM_MAP"
+    }
+    add_md5 "./casper/$BASE_LAYER" "$NEWSQ"
+    for ((i = 1; i < ${#CHAIN[@]}; i++)); do
+        add_md5 "./casper/${CHAIN[$i]}" "$WORK/empty.squashfs"
+    done
+    add_md5 "./casper/filesystem.size" "$WORK/filesystem.size"
+    for f in boot/grub/grub.cfg boot/grub/loopback.cfg \
+             casper/install-sources.yaml .disk/info; do
+        add_md5 "./$f" "$EXTRAS/$f"
+    done
+    if [ "${INITRD_REBUILT:-0}" -eq 1 ]; then
+        add_md5 "./$INITRD_PATH" "$EXTRAS/$INITRD_PATH"
+        [ -f "$EXTRAS/.disk/casper-uuid-generic" ] \
+            && add_md5 "./.disk/casper-uuid-generic" "$EXTRAS/.disk/casper-uuid-generic"
+    fi
+    for r in "${RM[@]}"; do printf '%s\n' ".$r" >> "$MD5SUM_DROP"; done
+
+    # ARGV[1] = map, ARGV[2] = drop, ARGV[3] = the base md5sum.txt.
+    awk '
+        FILENAME == ARGV[1] { md5[$1] = $2; next }
+        FILENAME == ARGV[2] { drop[$1] = 1; next }
+        {
+            if ($2 in drop) next
+            if ($2 in md5)  { printf "%s  %s\n", md5[$2], $2; next }
+            print
+        }
+    ' "$MD5SUM_MAP" "$MD5SUM_DROP" "$WORK/md5sum.base" > "$EXTRAS/md5sum.txt"
+
+    MAP+=( -map "$EXTRAS/md5sum.txt" /md5sum.txt )
+    ok "md5sum.txt rewritten ($(wc -l < "$MD5SUM_MAP") entries updated, $(wc -l < "$MD5SUM_DROP") dropped)"
+else
+    warn "no base md5sum.txt — live checksum verification will report the remaster as corrupt"
+fi
+
 set +e
 xorriso -indev "$BASE" -outdev "$OUTISO" \
     -boot_image any replay \
@@ -1027,6 +1089,34 @@ else
         ok "medium UUID still matches Ubuntu's initrd (not rebuilt)"
     else
         warn "medium UUID was changed (iso='$iso_uuid' base='$base_uuid') but the initrd was not rebuilt — casper will not find the medium"; fail=1
+    fi
+fi
+
+# /md5sum.txt must agree with what this build actually put in the image. The
+# entries we rewrote are checked by hash; the entries we dropped must be gone.
+# Files this build did not touch are copied through unchanged from the base
+# ISO, whose md5sum.txt was already correct for them.
+if [ -s "$EXTRAS/md5sum.txt" ]; then
+    rm -f "$WORK/tmp/md5.iso"
+    xorriso -osirrox on -indev "$OUTISO" \
+        -extract /md5sum.txt "$WORK/tmp/md5.iso" 2>/dev/null || true
+    if [ ! -s "$WORK/tmp/md5.iso" ]; then
+        warn "/md5sum.txt is missing from the image"; fail=1
+    else
+        bad=0
+        while read -r p m; do
+            got="$(awk -v p="$p" '$2 == p { print $1; exit }' "$WORK/tmp/md5.iso")"
+            [ "$got" = "$m" ] || { warn "md5sum.txt: $p records '${got:-nothing}', image has '$m'"; bad=1; }
+        done < "$MD5SUM_MAP"
+        while read -r p; do
+            [ -n "$p" ] || continue
+            if awk -v p="$p" '$2 == p { found=1 } END { exit !found }' "$WORK/tmp/md5.iso"; then
+                warn "md5sum.txt still lists deleted $p"; bad=1
+            fi
+        done < "$MD5SUM_DROP"
+        [ "$bad" -eq 0 ] \
+            && ok "md5sum.txt agrees with every file the build replaced or removed" \
+            || fail=1
     fi
 fi
 
