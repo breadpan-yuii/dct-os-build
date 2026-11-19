@@ -126,6 +126,7 @@ docs/            demo runbook, proposal, architecture, licensing, secure boot
 - `docs/secureboot.md` — **read this before touching firmware on any lab PC**
 - `docs/branding-checklist.md` — the file-by-file list you'll work through
 - `docs/licensing.md` — what you may and may not redistribute
+- `docs/releases/v1.0.md` — the published ISO: part checksums and reassembly
 
 ## Status
 
