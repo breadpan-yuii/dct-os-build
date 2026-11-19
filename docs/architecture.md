@@ -127,6 +127,14 @@ Two consequences the script has to handle:
   empty squashfs images of the same name. `install-sources.yaml` therefore points
   both installer entries at the base layer — pointing one at an intentionally
   empty upper layer would install a blank system.
+- **`/md5sum.txt` has to be rewritten, not carried over.** `casper-md5check`
+  runs on every live boot and verifies the medium against that file. A remaster
+  replaces the squashfs, the initrd, the GRUB config and `.disk/*`, and deletes
+  `SHA256SUMS`, so the base image's hashes are all wrong for the new one and the
+  checker reports "errors found in N files". The builder extracts the base
+  `md5sum.txt`, rewrites the entries it invalidates with the hash of the file
+  that actually ships, drops entries for deleted files, leaves the rest alone,
+  and verifies the result after packing.
 - **The medium UUID is load-bearing.** `casperize.conf` sets
   `CASPER_GENERATE_UUID=1`, so every initrd rebuild runs `uuidgen -r` and bakes a
   *new* random UUID into `conf/uuid.conf`. casper finds its own medium by
