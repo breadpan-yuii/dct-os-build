@@ -49,6 +49,21 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 . "$REPO/payload/branding/tokens.env"
 
+# ---------------------------------------------------------------------------
+# Match helpers.
+#
+# `grep -q` stops at the first match and exits, which sends SIGPIPE to the
+# writer on the other end of the pipe. With `set -o pipefail` that 141 wins the
+# pipeline's status, so a check that DID match reports failure. This is not
+# theoretical: it discarded a perfectly good rebuilt initrd as "no casper
+# hooks" and silently fell back to Ubuntu's. Here-strings are backed by a temp
+# file, so there is no writer to kill and the status is grep's alone.
+# ---------------------------------------------------------------------------
+has()      { grep -qF  -- "$1" <<< "$2"; }   # fixed string, anywhere in $2
+has_i()    { grep -qiF -- "$1" <<< "$2"; }   # fixed string, case-insensitive
+has_re()   { grep -qE  -- "$1" <<< "$2"; }   # extended regex, anywhere in $2
+has_word() { grep -qxF -- "$1" <<< "$2"; }   # $1 is one whole line of $2
+
 # Ubuntu Cinnamon is an official Ubuntu flavour: same Canonical-signed boot
 # chain, same casper layout, same archive. It is not the Linux Mint ISO, whose
 # own repos, update policy and installer would break the Ubuntu assumptions.
@@ -310,11 +325,11 @@ say "detecting layout"
 casper_list="$(xorriso -indev "$BASE" -find /casper -maxdepth 1 2>/dev/null \
                | tr -d "'" | sed 's|^/casper/||')"
 
-if printf '%s\n' "$casper_list" | grep -qx 'filesystem.squashfs'; then
+if has_word 'filesystem.squashfs' "$casper_list"; then
     LIVE_LAYER="filesystem.squashfs"
-elif printf '%s\n' "$casper_list" | grep -qx 'minimal.standard.live.squashfs'; then
+elif has_word 'minimal.standard.live.squashfs' "$casper_list"; then
     LIVE_LAYER="minimal.standard.live.squashfs"
-elif printf '%s\n' "$casper_list" | grep -qx 'minimal.squashfs'; then
+elif has_word 'minimal.squashfs' "$casper_list"; then
     LIVE_LAYER="minimal.squashfs"
 else
     printf '%s\n' "$casper_list" | sed 's/^/    /' >&2
@@ -340,7 +355,7 @@ ok "layer chain: ${CHAIN[*]}"
 ok "branded content goes into: $BASE_LAYER"
 
 for l in "${CHAIN[@]}"; do
-    printf '%s\n' "$casper_list" | grep -qx "$l" || die "layer $l missing from the ISO"
+    has_word "$l" "$casper_list" || die "layer $l missing from the ISO"
 done
 
 # ---------------------------------------------------------------------------
@@ -510,7 +525,7 @@ for p in casper/initrd casper/initrd.gz; do
     if [ -e "$ROOTFS/$p" ]; then INITRD_PATH="$p"; break; fi
 done
 # The initrd lives outside the squashfs on this layout; extract it for reference.
-if [ -z "$INITRD_PATH" ] && printf '%s\n' "$casper_list" | grep -qx 'initrd'; then
+if [ -z "$INITRD_PATH" ] && has_word 'initrd' "$casper_list"; then
     mkdir -p "$EXTRAS/casper"
     rm -f "$EXTRAS/casper/initrd"
     xorriso -osirrox on -indev "$BASE" -extract /casper/initrd "$EXTRAS/casper/initrd" 2>/dev/null \
@@ -688,15 +703,15 @@ if [ "$DO_INITRAMFS" -eq 1 ]; then
                 warn "rebuilt initrd is empty — keeping Ubuntu's"
             elif [ -z "$listing" ]; then
                 warn "could not list the rebuilt initrd — keeping Ubuntu's (see $LOGDIR/lsinitramfs.log)"
-            elif ! printf '%s\n' "$listing" | grep -q 'scripts/casper'; then
+            elif ! has 'scripts/casper' "$listing"; then
                 # Without casper in the initrd the image cannot boot at all.
                 warn "rebuilt initrd has no casper hooks — keeping Ubuntu's"
-            elif ! printf '%s\n' "$listing" | grep -q 'conf/conf.d/default-boot-to-casper.conf'; then
+            elif ! has 'conf/conf.d/default-boot-to-casper.conf' "$listing"; then
                 # The casper initramfs hook generates this file (and uuid.conf)
                 # only when CASPER_GENERATE_UUID is set. Without it the live
                 # session never hands over to casper.
                 warn "rebuilt initrd lost the casper boot config — keeping Ubuntu's"
-            elif ! printf '%s\n' "$listing" | grep -q 'plymouth/themes/dct'; then
+            elif ! has 'plymouth/themes/dct' "$listing"; then
                 warn "rebuilt initrd lacks the dct splash — keeping Ubuntu's"
             else
                 # A rebuilt initrd gets a NEW random UUID: casperize.conf sets
@@ -934,7 +949,7 @@ for l in $casper_list; do
 done
 # Stale checksums and a signature that can no longer be valid.
 for f in SHA256SUMS SHA256SUMS.gpg; do
-    printf '%s\n' "$casper_list" | grep -qx "$f" && RM+=( "/casper/$f" )
+    has_word "$f" "$casper_list" && RM+=( "/casper/$f" )
 done
 [ ${#RM[@]} -gt 0 ] && ok "removing ${#RM[@]} stale casper file(s)"
 RM_ARGS=()
@@ -1017,13 +1032,14 @@ ok "wrote $OUTISO ($(du -h "$OUTISO" | cut -f1))"
 say "verifying"
 fail=${BRANDING_FAIL:-0}
 
-if xorriso -indev "$OUTISO" -report_el_torito plain 2>/dev/null | grep -qi 'El Torito'; then
+el_torito="$(xorriso -indev "$OUTISO" -report_el_torito plain 2>/dev/null || true)"
+if has_i 'El Torito' "$el_torito"; then
     ok "El Torito boot record present (BIOS + UEFI)"
 else
     warn "no El Torito record — this image will NOT boot"; fail=1
 fi
 
-if xorriso -indev "$OUTISO" -report_el_torito plain 2>/dev/null | grep -qi 'UEFI'; then
+if has_i 'UEFI' "$el_torito"; then
     ok "UEFI boot entry present"
 else
     warn "no UEFI boot entry — Secure Boot machines will refuse it"; fail=1
@@ -1123,7 +1139,7 @@ fi
 new_list="$(xorriso -indev "$OUTISO" -find /casper -maxdepth 1 2>/dev/null \
             | tr -d "'" | sed 's|^/casper/||')"
 for c in "${CHAIN[@]}"; do
-    printf '%s\n' "$new_list" | grep -qx "$c" \
+    has_word "$c" "$new_list" \
         && ok "layer present: $c" || { warn "layer missing: $c"; fail=1; }
 done
 stray="$(printf '%s\n' "$new_list" | grep '\.squashfs$' | grep -vxF "$(printf '%s\n' "${CHAIN[@]}")" || true)"
@@ -1132,42 +1148,35 @@ stray="$(printf '%s\n' "$new_list" | grep '\.squashfs$' | grep -vxF "$(printf '%
 # Read the branding back out of the squashfs that is actually on the ISO.
 if xorriso -osirrox on -indev "$OUTISO" \
         -extract "/casper/$BASE_LAYER" "$WORK/verify.squashfs" 2>/dev/null; then
-    if unsquashfs -q -cat "$WORK/verify.squashfs" etc/os-release 2>/dev/null | grep -q '^ID=dctos'; then
+    osrel="$(unsquashfs -q -cat "$WORK/verify.squashfs" etc/os-release 2>/dev/null || true)"
+    if has_re '^ID=dctos' "$osrel"; then
         ok "squashfs on the ISO declares ID=dctos"
     else
         warn "squashfs on the ISO does not declare ID=dctos"; fail=1
     fi
-    if unsquashfs -q -cat "$WORK/verify.squashfs" etc/dct-os-release 2>/dev/null \
-            | grep -q 'BUILD_KIND="live-remaster"'; then
+    stamp="$(unsquashfs -q -cat "$WORK/verify.squashfs" etc/dct-os-release 2>/dev/null || true)"
+    if has 'BUILD_KIND="live-remaster"' "$stamp"; then
         ok "build stamp present (testers can prove which image booted)"
     else
         warn "build stamp missing from squashfs"
     fi
     if [ "$OFFICE_PKGS" -eq 1 ]; then
-        # grep -q exits on the first match and closes the pipe. For a large
-        # file (winetricks is ~800 KB) unsquashfs then dies on SIGPIPE (141),
-        # and `set -o pipefail` turns that into a false "missing". Disable
-        # pipefail around these content checks; the pipeline's status is then
-        # grep's, which is the answer we actually want.
-        if ( set +o pipefail
-             unsquashfs -q -cat "$WORK/verify.squashfs" \
-                 usr/share/applications/onlyoffice-desktopeditors.desktop 2>/dev/null \
-                 | grep -qi 'onlyoffice' ); then
+        oo="$(unsquashfs -q -cat "$WORK/verify.squashfs" \
+                 usr/share/applications/onlyoffice-desktopeditors.desktop 2>/dev/null || true)"
+        if has_i 'onlyoffice' "$oo"; then
             ok "OnlyOffice desktop entry present in the squashfs"
         else
             warn "OnlyOffice desktop entry missing from the squashfs"
         fi
-        if ( set +o pipefail
-             unsquashfs -q -cat "$WORK/verify.squashfs" usr/bin/winetricks 2>/dev/null \
-                 | grep -q 'winetricks' ); then
+        wt="$(unsquashfs -q -cat "$WORK/verify.squashfs" usr/bin/winetricks 2>/dev/null || true)"
+        if has 'winetricks' "$wt"; then
             ok "winetricks present (Wine compatibility layer)"
         else
             warn "winetricks missing from the squashfs"
         fi
-        if ( set +o pipefail
-             unsquashfs -q -cat "$WORK/verify.squashfs" \
-                 usr/local/bin/dct-office-install 2>/dev/null \
-                 | grep -q 'dct-office-install' ); then
+        oi="$(unsquashfs -q -cat "$WORK/verify.squashfs" \
+                 usr/local/bin/dct-office-install 2>/dev/null || true)"
+        if has 'dct-office-install' "$oi"; then
             ok "Office installer helper present"
         else
             warn "Office installer helper missing"

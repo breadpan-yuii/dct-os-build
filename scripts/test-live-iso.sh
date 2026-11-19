@@ -24,6 +24,14 @@
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
+# grep -q exits at the first match and sends SIGPIPE to the writer; with
+# pipefail that 141 becomes the pipeline status, so a successful match can be
+# read as a failure. These match a here-string (no writer process) or a file.
+has()      { grep -qF  -- "$1" <<< "$2"; }
+has_i()    { grep -qiF -- "$1" <<< "$2"; }
+has_re()   { grep -qE  -- "$1" <<< "$2"; }
+has_word() { grep -qxF -- "$1" <<< "$2"; }
+
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 TMP_BASE="${TMPDIR:-$REPO/.iso-work}"
@@ -87,16 +95,16 @@ printf '  %s\n  %s\n  accel: %s\n' "$ISO" "$(du -h "$ISO" | cut -f1)" "$ACCEL_NO
 if [ "$DO_STRUCT" -eq 1 ]; then
     h "structure"
 
-    if xorriso -indev "$ISO" -report_el_torito plain 2>/dev/null | grep -qi 'El Torito'; then
+    torito="$(xorriso -indev "$ISO" -report_el_torito plain 2>/dev/null || true)"
+    if has_i 'El Torito' "$torito"; then
         p "El Torito boot record"
     else
         f "no El Torito record — not bootable"
     fi
 
-    torito="$(xorriso -indev "$ISO" -report_el_torito plain 2>/dev/null || true)"
-    printf '%s\n' "$torito" | grep -qi 'BIOS' && p "BIOS/legacy boot entry" \
+    has_i 'BIOS' "$torito" && p "BIOS/legacy boot entry" \
         || w "no BIOS boot entry (UEFI-only image)"
-    printf '%s\n' "$torito" | grep -qi 'UEFI' && p "UEFI boot entry" \
+    has_i 'UEFI' "$torito" && p "UEFI boot entry" \
         || f "no UEFI boot entry — Secure Boot machines will refuse it"
 
     if xorriso -indev "$ISO" -ls /EFI/BOOT/BOOTX64.EFI >/dev/null 2>&1; then
@@ -117,7 +125,7 @@ if [ "$DO_STRUCT" -eq 1 ]; then
                    | tr -d "'" | sed 's|^/casper/||' || true)"
     base=""
     for cand in filesystem.squashfs minimal.squashfs; do
-        printf '%s\n' "$casper_list" | grep -qx "$cand" && { base="$cand"; break; }
+        has_word "$cand" "$casper_list" && { base="$cand"; break; }
     done
     if [ -n "$base" ]; then
         p "base layer: $base"
@@ -134,36 +142,36 @@ if [ "$DO_STRUCT" -eq 1 ]; then
         printf '  reading branding out of %s ...\n' "$base"
         if xorriso -osirrox on -indev "$ISO" \
                 -extract "/casper/$base" "$TMP/base.squashfs" 2>/dev/null; then
-            if unsquashfs -q -cat "$TMP/base.squashfs" etc/os-release 2>/dev/null \
-                    | grep -q '^ID=dctos'; then
+            osrel="$(unsquashfs -q -cat "$TMP/base.squashfs" etc/os-release 2>/dev/null || true)"
+            if has_re '^ID=dctos' "$osrel"; then
                 p "squashfs declares ID=dctos"
             else
                 f "squashfs does not declare ID=dctos"
             fi
-            if unsquashfs -q -cat "$TMP/base.squashfs" etc/dct-os-release 2>/dev/null \
-                    | grep -q 'BUILD_KIND='; then
+            stamp="$(unsquashfs -q -cat "$TMP/base.squashfs" etc/dct-os-release 2>/dev/null || true)"
+            if has 'BUILD_KIND=' "$stamp"; then
                 p "build stamp present (proves which image booted)"
             else
                 w "no /etc/dct-os-release in the squashfs"
             fi
-            if unsquashfs -ll "$TMP/base.squashfs" >"$TMP/base.list" 2>/dev/null \
-                    && grep -Fq 'etc/systemd/user/ubuntu-desktop-installer.service -> /dev/null' \
-                        "$TMP/base.list"; then
+            # One listing, reused: grepping the file avoids a pipe from
+            # unsquashfs (which SIGPIPEs when grep -q exits early).
+            unsquashfs -ll "$TMP/base.squashfs" >"$TMP/base.list" 2>/dev/null || true
+            if [ -s "$TMP/base.list" ] \
+               && grep -qF 'etc/systemd/user/ubuntu-desktop-installer.service -> /dev/null' \
+                    "$TMP/base.list"; then
                 p "Ubuntu installer does not auto-open over the DCT live desktop"
             else
                 f "Ubuntu installer auto-start mask missing from the live system"
             fi
-            if unsquashfs -q -cat "$TMP/base.squashfs" etc/lightdm/slick-greeter.conf 2>/dev/null \
-                    | grep -q '^background=/usr/share/backgrounds/dct/dct-greeter.png'; then
+            greeter="$(unsquashfs -q -cat "$TMP/base.squashfs" etc/lightdm/slick-greeter.conf 2>/dev/null || true)"
+            if has_re '^background=/usr/share/backgrounds/dct/dct-greeter.png' "$greeter"; then
                 p "greeter policy points at the purple/gray backdrop"
             else
                 f "greeter policy missing or not pointing at dct-greeter.png"
             fi
-            # Large listing: grep -q can SIGPIPE unsquashfs, so relax pipefail
-            # around this one (same reason as the content checks in the build).
-            if ( set +o pipefail
-                 unsquashfs -q -ll "$TMP/base.squashfs" 2>/dev/null \
-                     | grep -q 'usr/share/themes/Yaru-purple-dark/' ); then
+            if [ -s "$TMP/base.list" ] \
+               && grep -qF 'usr/share/themes/Yaru-purple-dark/' "$TMP/base.list"; then
                 p "Yaru-purple-dark GTK theme present"
             else
                 f "Yaru-purple-dark theme missing — desktop falls back to Adwaita"

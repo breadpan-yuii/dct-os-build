@@ -335,7 +335,8 @@ else
 fi
 
 if [ "$ROOT" = "/" ] && command -v dpkg-divert >/dev/null 2>&1; then
-    if dpkg-divert --list /etc/os-release 2>/dev/null | grep -q dct; then
+    divs="$(dpkg-divert --list /etc/os-release 2>/dev/null || true)"
+    if grep -qF 'dct' <<< "$divs"; then
         p "/etc/os-release diverted away from base-files"
     else
         f "/etc/os-release is NOT diverted — base-files will overwrite it"

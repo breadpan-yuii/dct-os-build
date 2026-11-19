@@ -97,8 +97,13 @@ installer-assets: ## re-trace installer artwork from the seal (needs uv)
 	    python3 scripts/make-installer-assets.py
 
 .PHONY: lint
-lint: ## bash syntax check on every script
+lint: ## bash syntax check on every script + the grep -q SIGPIPE guard
 	@for f in scripts/*.sh; do bash -n "$$f" && echo "ok  $$f"; done
+	@./scripts/test-shell-guards.sh
+
+.PHONY: test-guards
+test-guards: ## prove the SIGPIPE guard helpers and scan for the unsafe idiom
+	@./scripts/test-shell-guards.sh
 
 .PHONY: clean
 clean: ## remove build artefacts
