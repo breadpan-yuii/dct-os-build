@@ -138,15 +138,15 @@ docs/            demo runbook, proposal, architecture, licensing, secure boot
 | Login greeter | `dct-greeter.png` + `/etc/lightdm/slick-greeter.conf`; confirmed present in the image, **not yet seen on screen** |
 | Boot | Plymouth themed and colour-checked against the tokens. GRUB menu relabelled; the live ISO's GRUB is not themed (installed systems are) |
 | Installer | Canonical's `ubuntu-desktop-bootstrap` snap, launcher renamed **Install Dominican OS**, artwork overlaid at boot. Auto-launch is masked, so the live session is try-only |
-| Live ISO | Built and boot-tested: `dist/Dominican-OS-1.0-live-amd64.iso`, 7.53 GB. Serial boot **3/3** (real casper medium detection, no `ignore_uuid`), structure **15/15**. Sum in the matching `.sha256` file |
+| Live ISO | Built and boot-tested: `dist/Dominican-OS-1.0-live-amd64.iso`, 7.53 GB, published as release **v1.0**. Serial boot **3/3** (real casper medium detection, no `ignore_uuid`), structure **15/15**, and the image's own `/md5sum.txt` verifies **302/302** against the mounted image. Early-boot splash is DCT's (initrd rebuilt, medium UUID re-synced). Sum in the matching `.sha256` file |
 | Reproducible ISO (`.deb` packages, live-build) | Written, **never executed** — needs a container runtime |
 | Office stack | OnlyOffice default, LibreOffice fallback, Wine bundled. Microsoft Office installs only from DCT's licensed media, which has not been supplied, so that path is untested |
 
 **Proven:** the image boots to a live desktop — casper finds its medium, assembles
 the layer chain and hands over to systemd, with the host named `dominican`.
 Branding files are in the right paths, every theme named in the overrides exists,
-greeter policy matches the schema, plymouth colours match `tokens.env`, and the
-installer overlay unit is enabled.
+greeter policy matches the schema, plymouth colours match `tokens.env`, the
+installer overlay unit is enabled, and `casper-md5check` has nothing to report.
 
 **Not yet proven:** how the desktop and greeter actually look, idle RAM on a
 4 GB machine, the installer window on screen, an install from the ISO, and a
