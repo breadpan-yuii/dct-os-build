@@ -135,6 +135,14 @@ Two consequences the script has to handle:
   `md5sum.txt`, rewrites the entries it invalidates with the hash of the file
   that actually ships, drops entries for deleted files, leaves the rest alone,
   and verifies the result after packing.
+- **A shell check must not be able to lie.** `producer | grep -q pattern` under
+  `set -o pipefail` fails nondeterministically: grep exits at the first match,
+  the producer is killed by SIGPIPE, and 141 is read as "no match". On the
+  150 KB initrd listing it misfired 14 times in 30 runs, which silently
+  discarded a good rebuilt initrd as "no casper hooks" and shipped Ubuntu's
+  instead. All checks use the `has`/`has_i`/`has_re`/`has_word` helpers, which
+  match a here-string (no producer to kill). `make lint` rejects the idiom and
+  `scripts/test-shell-guards.sh` reproduces the defect on demand.
 - **The medium UUID is load-bearing.** `casperize.conf` sets
   `CASPER_GENERATE_UUID=1`, so every initrd rebuild runs `uuidgen -r` and bakes a
   *new* random UUID into `conf/uuid.conf`. casper finds its own medium by
@@ -274,6 +282,7 @@ boots the ISO's own kernel and initrd in text mode and waits for a login prompt.
 | Installed system is blank | `install-sources.yaml` points at an empty upper layer | both entries must point at the base layer |
 | Installer offers two identical entries | expected — both are Dominican OS; the ids are kept only so the installer recognises them | — |
 | Build dies with "not enough disk space" | peak is ~22 GB (ISO + tree + new squashfs) | free space; layers are deleted as soon as they are mounted |
+| `rebuilt initrd has no casper hooks` on one build and not the next | `producer | grep -q` under `set -o pipefail`: grep exits at the first match, the producer dies on SIGPIPE, 141 is read as "no match" | use `has`/`has_word` from the build script; `make lint` rejects the idiom, `scripts/test-shell-guards.sh` reproduces it |
 | Branding gone after `apt upgrade` | the update shield did not install | run `dct-rebrand`; see `updates.md` |
 
 ## What ships inside
