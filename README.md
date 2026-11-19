@@ -66,6 +66,7 @@ yourself editing an ISO by hand, stop — the change belongs in `payload/`.
 | **Branding loop** | `sudo ./scripts/apply-branding.sh` on a prepared VM | You are changing assets or theme |
 | **Live ISO** | `sudo ./scripts/build-live-iso.sh` | You need a bootable USB for a real PC, now |
 | **Boot test** | `./scripts/test-live-iso.sh --serial` (does it reach a desktop?) and `--structure` (are the parts in the image?) | Before writing any ISO to a stick |
+| **Script checks** | `make lint` | Before every commit — syntax plus the `grep -q` SIGPIPE guard |
 | **Reproducible** | `make pkgs && make iso` | Production, once branding is settled |
 
 The live ISO path remasters the official Ubuntu Cinnamon 24.04 ISO. Ubuntu
