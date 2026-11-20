@@ -15,13 +15,13 @@ Drop files here before running `scripts/apply-branding.sh`. Names are load-beari
 |---|---|---|
 | `logo.png` | `/usr/share/plymouth/themes/dct/logo.png` | 480×270, transparent PNG |
 | `logo.svg` | `/usr/share/pixmaps/dct-logo.svg` | vector source, the master |
-| `dct-logo.png` | `/usr/share/pixmaps/dct-logo.png` | 256×256, transparent, for the greeter |
+| `dct-logo.png` | `/usr/share/pixmaps/dct-logo.png`; `/usr/share/calamares/branding/dct/logo.png` | 256×256 transparent seal, shared by greeter and Calamares |
 | `background.png` | `/boot/grub/themes/dct/background.png` | 1920×1080 |
 | `dct-default.png` | `/usr/share/backgrounds/dct/` | 3840×2160, day |
 | `dct-default-dark.png` | `/usr/share/backgrounds/dct/` | 3840×2160, dark |
 | `dct-lock.png` | `/usr/share/backgrounds/dct/` | 3840×2160, lock screen |
 | `dct-greeter.png` | `/usr/share/backgrounds/dct/` | 3840×2160, **login screen** — must read purple + gray |
-| `welcome.png` | `/etc/calamares/branding/dct/welcome.png` | 1200×800, Calamares welcome page |
+| `welcome.png` | `/usr/share/calamares/branding/dct/welcome.png` | 1200×800, Calamares welcome page |
 | `progress_bg.png` / `progress_fg.png` | plymouth theme dir | 300×8, optional |
 
 ## Rules

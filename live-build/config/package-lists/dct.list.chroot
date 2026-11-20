@@ -1,6 +1,8 @@
 # Packages baked into the Dominican OS live image.
-# Keep this list short and let dct-os-desktop pull the rest — one place to edit.
+# This is a clean Ubuntu live-build root, not the prebuilt Ubuntu Cinnamon ISO,
+# so explicitly install the official minimal Ubuntu Cinnamon desktop task.
 
+ubuntucinnamon-desktop-minimal
 dct-os-desktop
 dct-os-defaults
 

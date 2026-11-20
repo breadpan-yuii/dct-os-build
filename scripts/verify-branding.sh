@@ -216,6 +216,32 @@ if [ -r "$OVR" ]; then
         fi
     fi
 
+    cinnamon_val() {                         # key in [org.cinnamon]
+        awk -v want="$1" -F'[][]' '
+            /^\[/ { sec=$2; next }
+            sec=="org.cinnamon" && index($0, want "=")==1 {
+                v=substr($0, length(want)+2)
+                q=sprintf("%c",39); gsub("^" q "|" q "$","",v); print v; exit
+            }' "$OVR"
+    }
+    menu_label="$(cinnamon_val app-menu-label)"
+    [ "$menu_label" = "$DCT_NAME" ] \
+        && p "Cinnamon menu is branded '$menu_label'" \
+        || f "Cinnamon menu label is '${menu_label:-unset}', expected '$DCT_NAME'"
+    menu_icon="$(cinnamon_val app-menu-icon-name)"
+    if [ "$menu_icon" = dct-os ] \
+       && exists /usr/share/icons/hicolor/scalable/apps/dct-os.svg; then
+        p "Cinnamon menu uses the DCT icon"
+    else
+        f "Cinnamon menu icon '$menu_icon' is missing or not installed"
+    fi
+
+    if grep -q "^banner-message-enable=false$" "$OVR"; then
+        p "GNOME login banner disabled (no activity-logging message)"
+    else
+        f "GNOME login banner is enabled"
+    fi
+
     logo="$(sed -n "s/^logo='\(.*\)'/\1/p" "$OVR" | head -1)"
     if [ -n "$logo" ]; then
         exists "$logo" && p "greeter logo present" || f "greeter logo $logo missing"
@@ -298,8 +324,8 @@ echo "== splash / theme colours =="
 # Every rendered template must have had its @DCT_*@ placeholders substituted.
 for tpl in /boot/grub/themes/dct/theme.txt \
            /usr/share/plymouth/themes/dct/dct.script \
-           /etc/calamares/branding/dct/branding.desc \
-           /etc/calamares/branding/dct/stylesheet.qss; do
+           /usr/share/calamares/branding/dct/branding.desc \
+           /usr/share/calamares/branding/dct/stylesheet.qss; do
     [ -r "$T$tpl" ] || continue
     if grep -q '@DCT_' "$T$tpl"; then
         f "unreplaced @DCT_ placeholder in $tpl"
@@ -392,14 +418,21 @@ fi
 # Calamares names its images by filename in branding.desc. A missing file does
 # not stop the install, but it renders a broken picture on the welcome page —
 # exactly the sort of thing nobody notices until the demo. Check every name.
-CD="$T/etc/calamares/branding/dct/branding.desc"
+CD="$T/usr/share/calamares/branding/dct/branding.desc"
 if [ -r "$CD" ]; then
+    if [ -r "$T/etc/calamares/settings.conf" ] \
+       && grep -qE '^[[:space:]]*branding:[[:space:]]*dct[[:space:]]*$' \
+                  "$T/etc/calamares/settings.conf"; then
+        p "Calamares settings select the DCT branding pack"
+    else
+        f "Calamares branding pack is present but settings.conf does not select 'branding: dct'"
+    fi
     imgs="$(awk '/^images:/{f=1;next} f && /^[^[:space:]]/{f=0} f' "$CD" \
             | sed -n 's/.*"\([^"]*\)".*/\1/p' | sort -u)"
     if [ -n "$imgs" ]; then
         missing=""
         for img in $imgs; do
-            [ -f "$T/etc/calamares/branding/dct/$img" ] || missing="$missing $img"
+            [ -f "$T/usr/share/calamares/branding/dct/$img" ] || missing="$missing $img"
         done
         [ -z "$missing" ] && p "calamares images present ($(echo $imgs | wc -w) files)" \
             || f "calamares branding.desc references missing image(s):$missing"

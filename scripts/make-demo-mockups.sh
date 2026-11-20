@@ -24,11 +24,19 @@ PURPLE="#$DCT_PURPLE"; PURPLE_DEEP="#$DCT_PURPLE_DEEP"; PURPLE_LIGHT="#$DCT_PURP
 GRAY="#$DCT_GRAY"; GRAY_DARK="#$DCT_GRAY_DARK"; GRAY_MID="#$DCT_GRAY_MID"; GRAY_LIGHT="#$DCT_GRAY_LIGHT"
 WHITE="#$DCT_WHITE"; MUTED="#$DCT_TEXT_MUTED"
 F="${DCT_FONT:-Inter}"
+LOGIN_DATE="$(date '+%A, %-d %B %Y')"
+CURRENT_CLOCK="$(date '+%H:%M')"
+DESKTOP_CLOCK="$(date '+%a %d %b   %H:%M')"
 
 # Working copies of the source art (same derivation as make-demo-assets.sh).
 HAVE_LOCKUP=0; HAVE_SEAL=0
 [ -f "$SRC/dct-lockup.png" ] && { magick "$SRC/dct-lockup.png" -trim +repage "$WORK/lockup.png"; HAVE_LOCKUP=1; }
 [ -f "$SRC/dct-seal.png" ]   && { magick "$SRC/dct-seal.png"   -trim +repage "$WORK/seal.png";   HAVE_SEAL=1; }
+cp "$REPO/payload/installer/light-theme.png" "$WORK/installer-light-theme.png"
+cp "$REPO/payload/installer/dark-theme.png" "$WORK/installer-dark-theme.png"
+cp "$REPO/payload/installer/logo-light.svg" "$WORK/installer-logo-light.svg"
+cp "$REPO/payload/installer/logo-dark.svg" "$WORK/installer-logo-dark.svg"
+cp "$REPO/payload/installer/dct-os.svg" "$WORK/dct-os.svg"
 
 LOCKUP_RATIO=2.85
 if [ "$HAVE_LOCKUP" -eq 1 ]; then
@@ -88,7 +96,7 @@ EOF
   <!-- selected entry -->
   <rect x="150" y="400" width="1200" height="64" rx="4" fill="$PURPLE"/>
   <text x="182" y="440" font-family="$F" font-size="26" font-weight="bold" fill="$PURPLE_DEEP">$DCT_PRETTY_NAME</text>
-  <text x="1290" y="440" font-family="$F" font-size="15" fill="$PURPLE_DEEP" text-anchor="end" opacity="0.75">GNU/Linux 6.17.0</text>
+  <text x="1290" y="440" font-family="$F" font-size="15" fill="$PURPLE_DEEP" text-anchor="end" opacity="0.75">GNU/Linux 7.0.0-31</text>
 
   <g font-family="$F" font-size="24" fill="$MUTED">
     <text x="182" y="512">$DCT_PRETTY_NAME (recovery mode)</text>
@@ -131,55 +139,57 @@ EOF
 } > "$WORK/m-plymouth.svg"
 
 # ---------------------------------------------------------------------------
-# 3. Calamares installer
+# 3. Actual installer overlay preview.
+# This is deliberately an asset-overlay preview, not a drawn installer window:
+# the live image launches Canonical's signed ubuntu-desktop-bootstrap Flutter
+# app, and the branding overlay replaces only its six logo/mascot/theme assets.
+# The app's layout and screens remain upstream and are not represented here.
 # ---------------------------------------------------------------------------
 {
     echo "$HEAD"
     cat <<EOF
+  <defs>
+    <pattern id="light" patternUnits="userSpaceOnUse" width="692" height="392">
+      <image width="692" height="392" preserveAspectRatio="none" xlink:href="installer-light-theme.png"/>
+    </pattern>
+    <pattern id="dark" patternUnits="userSpaceOnUse" width="692" height="392">
+      <image width="692" height="392" preserveAspectRatio="none" xlink:href="installer-dark-theme.png"/>
+    </pattern>
+  </defs>
   <rect width="1920" height="1080" fill="$GRAY_DARK"/>
-  <rect x="240" y="130" width="1440" height="820" rx="10" fill="$WHITE"/>
-  <rect x="240" y="130" width="400" height="820" rx="10" fill="$PURPLE_DEEP"/>
-  <rect x="600" y="130" width="40" height="820" fill="$PURPLE_DEEP"/>
+  <text x="160" y="150" font-family="$F" font-size="16" fill="$PURPLE_LIGHT" letter-spacing="3">$DCT_PRETTY_NAME</text>
+  <text x="160" y="220" font-family="$F" font-size="42" font-weight="bold" fill="$WHITE">Installer branding preview</text>
+  <text x="160" y="264" font-family="$F" font-size="20" fill="$MUTED">DCT logos and purple/gray theme assets for the existing installer</text>
+
+  <rect x="160" y="330" width="760" height="520" rx="12" fill="#F4F6FA"/>
+  <rect x="160" y="330" width="760" height="64" rx="12" fill="#E8EBF0"/>
+  <rect x="160" y="382" width="760" height="12" fill="#E8EBF0"/>
+  <circle cx="198" cy="362" r="8" fill="#B9BEC8"/>
+  <circle cx="226" cy="362" r="8" fill="#B9BEC8"/>
+  <circle cx="254" cy="362" r="8" fill="#B9BEC8"/>
+  <text x="290" y="369" font-family="$F" font-size="17" fill="$GRAY_DARK">Dominican OS · light appearance</text>
+  <rect x="194" y="424" width="692" height="392" rx="8" fill="url(#light)"/>
+  <image x="250" y="470" width="300" height="104" xlink:href="installer-logo-light.svg"/>
+  <text x="250" y="638" font-family="$F" font-size="30" font-weight="bold" fill="$PURPLE_DEEP">DCT logo + light theme</text>
+  <text x="250" y="682" font-family="$F" font-size="18" fill="$GRAY_MID">The real installer supplies the controls,</text>
+  <text x="250" y="712" font-family="$F" font-size="18" fill="$GRAY_MID">navigation and page content.</text>
+
+  <rect x="1000" y="330" width="760" height="520" rx="12" fill="#F4F6FA"/>
+  <rect x="1000" y="330" width="760" height="64" rx="12" fill="#E8EBF0"/>
+  <rect x="1000" y="382" width="760" height="12" fill="#E8EBF0"/>
+  <circle cx="1038" cy="362" r="8" fill="#B9BEC8"/>
+  <circle cx="1066" cy="362" r="8" fill="#B9BEC8"/>
+  <circle cx="1094" cy="362" r="8" fill="#B9BEC8"/>
+  <text x="1130" y="369" font-family="$F" font-size="17" fill="$GRAY_DARK">Dominican OS · dark appearance</text>
+  <rect x="1034" y="424" width="692" height="392" rx="8" fill="url(#dark)"/>
+  <image x="1090" y="470" width="300" height="104" xlink:href="installer-logo-dark.svg"/>
+  <text x="1090" y="638" font-family="$F" font-size="30" font-weight="bold" fill="$WHITE">DCT logo + dark theme</text>
+  <text x="1090" y="682" font-family="$F" font-size="18" fill="$MUTED">The installer's real workflow stays;</text>
+  <text x="1090" y="712" font-family="$F" font-size="18" fill="$MUTED">DCT supplies these artwork assets.</text>
 EOF
-    lockup 300 290 190 1
     cat <<EOF
-  <rect x="290" y="330" width="80" height="3" fill="$PURPLE_LIGHT"/>
-  <text x="290" y="368" font-family="$F" font-size="14" fill="$MUTED" letter-spacing="1">$DCT_VERSION &#183; $DCT_CODENAME</text>
-
-  <g font-family="$F" font-size="17">
-    <rect x="290" y="470" width="4" height="26" fill="$PURPLE_LIGHT"/>
-    <text x="310" y="491" fill="$PURPLE_LIGHT" font-weight="bold">Welcome</text>
-    <text x="310" y="539" fill="$MUTED">Location</text>
-    <text x="310" y="587" fill="$MUTED">Keyboard</text>
-    <text x="310" y="635" fill="$MUTED">Partitions</text>
-    <text x="310" y="683" fill="$MUTED">Users</text>
-    <text x="310" y="731" fill="$MUTED">Summary</text>
-    <text x="310" y="779" fill="$MUTED">Install</text>
-  </g>
-
-  <text x="700" y="250" font-family="$F" font-size="34" font-weight="bold" fill="$PURPLE_DEEP">Welcome to $DCT_NAME</text>
-  <text x="700" y="292" font-family="$F" font-size="17" fill="$GRAY_MID">
-    This installer will guide you through installing $DCT_NAME on this computer.</text>
-
-  <g fill="#F4F4F4">
-    <rect x="700" y="340" width="900" height="96" rx="6"/>
-    <rect x="700" y="456" width="900" height="96" rx="6"/>
-  </g>
-  <g font-family="$F" font-size="15" fill="$PURPLE_DEEP">
-    <text x="726" y="378" font-weight="bold">English (Philippines)</text>
-    <text x="726" y="404" fill="$GRAY_MID">Language for the installed system</text>
-    <text x="726" y="494" font-weight="bold">Asia / Manila</text>
-    <text x="726" y="520" fill="$GRAY_MID">Time zone and clock</text>
-  </g>
-  <rect x="700" y="340" width="900" height="96" rx="6" fill="none" stroke="$PURPLE" stroke-width="2"/>
-
-  <text x="700" y="620" font-family="$F" font-size="15" fill="$GRAY_MID">
-    $DCT_NAME is built on Ubuntu 24.04 LTS. Not affiliated with Zorin OS or Canonical.</text>
-
-  <rect x="1290" y="860" width="150" height="46" rx="5" fill="$GRAY_LIGHT"/>
-  <text x="1365" y="889" font-family="$F" font-size="16" fill="$GRAY_DARK" text-anchor="middle">Back</text>
-  <rect x="1452" y="860" width="150" height="46" rx="5" fill="$PURPLE"/>
-  <text x="1527" y="889" font-family="$F" font-size="16" font-weight="bold" fill="$WHITE" text-anchor="middle">Next</text>
+  <text x="160" y="930" font-family="$F" font-size="17" fill="$MUTED">Overlay scope: logo-light.svg, logo-dark.svg, mascot.svg, mascot_no_background.svg, light-theme.png, dark-theme.png.</text>
+  <text x="160" y="968" font-family="$F" font-size="16" fill="$MUTED">Shows the exact DCT assets overlaid; it is not a screenshot of the installer's screens.</text>
 </svg>
 EOF
 } > "$WORK/m-installer.svg"
@@ -204,42 +214,42 @@ EOF
 EOF
     lockup 420 1500 880 0.06
     cat <<EOF
-  <text x="1860" y="90" font-family="$F" font-size="44" fill="$WHITE" text-anchor="end">21:40</text>
-  <text x="1860" y="126" font-family="$F" font-size="18" fill="$MUTED" text-anchor="end">Wednesday, 11 November 2026</text>
+  <text x="1860" y="90" font-family="$F" font-size="44" fill="$WHITE" text-anchor="end">$CURRENT_CLOCK</text>
+  <text x="1860" y="126" font-family="$F" font-size="18" fill="$MUTED" text-anchor="end">$LOGIN_DATE</text>
 EOF
-    seal 160 880 240 1
+    seal 148 886 300 1
     cat <<EOF
-  <text x="960" y="470" font-family="$F" font-size="15" fill="$MUTED"
-        text-anchor="middle" letter-spacing="3">$DCT_NAME</text>
-  <text x="960" y="530" font-family="$F" font-size="30" font-weight="bold" fill="$WHITE" text-anchor="middle">student</text>
-
-  <rect x="700" y="576" width="520" height="54" rx="27" fill="$WHITE" fill-opacity="0.10"
+  <text x="960" y="492" font-family="$F" font-size="34" font-weight="bold" fill="$WHITE"
+        text-anchor="middle">$DCT_NAME</text>
+  <text x="960" y="526" font-family="$F" font-size="15" fill="$MUTED"
+        text-anchor="middle" letter-spacing="1">$DCT_VENDOR</text>
+  <rect x="700" y="620" width="520" height="54" rx="27" fill="$WHITE" fill-opacity="0.10"
         stroke="$WHITE" stroke-opacity="0.18"/>
   <g fill="$MUTED">
-    <circle cx="742" cy="603" r="5"/><circle cx="766" cy="603" r="5"/><circle cx="790" cy="603" r="5"/>
-    <circle cx="814" cy="603" r="5"/><circle cx="838" cy="603" r="5"/><circle cx="862" cy="603" r="5"/>
-    <circle cx="886" cy="603" r="5"/><circle cx="910" cy="603" r="5"/>
+    <circle cx="742" cy="647" r="5"/><circle cx="766" cy="647" r="5"/><circle cx="790" cy="647" r="5"/>
+    <circle cx="814" cy="647" r="5"/><circle cx="838" cy="647" r="5"/><circle cx="862" cy="647" r="5"/>
+    <circle cx="886" cy="647" r="5"/><circle cx="910" cy="647" r="5"/>
   </g>
-  <rect x="840" y="662" width="240" height="48" rx="24" fill="$PURPLE"/>
-  <text x="960" y="693" font-family="$F" font-size="17" font-weight="bold" fill="$PURPLE_DEEP" text-anchor="middle">Sign In</text>
+  <rect x="840" y="704" width="240" height="48" rx="24" fill="$PURPLE"/>
+  <text x="960" y="735" font-family="$F" font-size="17" font-weight="bold" fill="$PURPLE_DEEP" text-anchor="middle">Sign In</text>
 
   <text x="960" y="920" font-family="$F" font-size="15" fill="$MUTED" text-anchor="middle" letter-spacing="0.5">
-    $DCT_VENDOR &#8212; authorized users only. Activity is logged.</text>
+    $DCT_VENDOR</text>
   <text x="960" y="948" font-family="$F" font-size="13" fill="$MUTED" text-anchor="middle" opacity="0.6">
-    $DCT_PRETTY_NAME ($DCT_CODENAME) &#183; built on Ubuntu 24.04 LTS</text>
+    $DCT_PRETTY_NAME ($DCT_CODENAME) &#183; Dominican OS</text>
 </svg>
 EOF
 } > "$WORK/m-login.svg"
 
 # ---------------------------------------------------------------------------
-# 5. Desktop
+# 5. Cinnamon desktop
 # ---------------------------------------------------------------------------
 {
     echo "$HEAD"
     cat <<EOF
   <defs>
     <linearGradient id="d" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="$PURPLE"/><stop offset="100%" stop-color="$PURPLE_DEEP"/>
+      <stop offset="0%" stop-color="$PURPLE_LIGHT"/><stop offset="100%" stop-color="$PURPLE_DEEP"/>
     </linearGradient>
     <radialGradient id="dg" cx="0.22" cy="0.82" r="0.62">
       <stop offset="0%" stop-color="$PURPLE" stop-opacity="0.18"/>
@@ -248,74 +258,62 @@ EOF
   </defs>
   <rect width="1920" height="1080" fill="url(#d)"/>
   <rect width="1920" height="1080" fill="url(#dg)"/>
-  <path d="M0 820 L1920 500 L1920 560 L0 880 Z" fill="$WHITE" opacity="0.03"/>
 EOF
-    lockup 620 1240 700 0.12
+    lockup 400 1450 730 0.10
     cat <<EOF
-  <rect width="1920" height="34" fill="#000000" fill-opacity="0.32"/>
-  <text x="20" y="23" font-family="$F" font-size="14" fill="$WHITE">Activities</text>
-  <text x="110" y="23" font-family="$F" font-size="14" font-weight="bold" fill="$WHITE">DCT Portal</text>
-  <text x="1900" y="23" font-family="$F" font-size="13" fill="$WHITE" text-anchor="end">Wed 11 Nov   21:40</text>
+  <!-- Nemo file manager window with Cinnamon-style titlebar/window controls -->
+  <rect x="286" y="112" width="1348" height="812" rx="8" fill="#000000" opacity="0.22"/>
+  <rect x="270" y="96" width="1348" height="812" rx="8" fill="#F5F4F8" stroke="#292735" stroke-width="2"/>
+  <rect x="270" y="96" width="1348" height="54" rx="8" fill="$GRAY_DARK"/>
+  <rect x="270" y="138" width="1348" height="12" fill="$GRAY_DARK"/>
+  <text x="310" y="131" font-family="$F" font-size="17" fill="$WHITE">Files — Home</text>
+  <circle cx="1548" cy="123" r="8" fill="$GRAY_MID"/>
+  <circle cx="1578" cy="123" r="8" fill="$GRAY_MID"/>
+  <circle cx="1600" cy="123" r="8" fill="$PURPLE"/>
 
-  <rect x="14" y="360" width="66" height="368" rx="16" fill="#000000" fill-opacity="0.28"/>
-  <g>
-    <rect x="22" y="370" width="50" height="50" rx="12" fill="#2E5AAC"/>
-    <text x="47" y="403" font-family="$F" font-size="18" font-weight="bold" fill="$WHITE" text-anchor="middle">F</text>
-    <rect x="22" y="428" width="50" height="50" rx="12" fill="#C0392B"/>
-    <text x="47" y="461" font-family="$F" font-size="18" font-weight="bold" fill="$WHITE" text-anchor="middle">O</text>
-    <rect x="22" y="486" width="50" height="50" rx="12" fill="#1E8449"/>
-    <text x="47" y="519" font-family="$F" font-size="18" font-weight="bold" fill="$WHITE" text-anchor="middle">L</text>
-    <rect x="22" y="544" width="50" height="50" rx="12" fill="#E67E22"/>
-    <text x="47" y="577" font-family="$F" font-size="18" font-weight="bold" fill="$WHITE" text-anchor="middle">P</text>
-    <rect x="22" y="602" width="50" height="50" rx="12" fill="$PURPLE"/>
-    <text x="47" y="635" font-family="$F" font-size="18" font-weight="bold" fill="$PURPLE_DEEP" text-anchor="middle">D</text>
-    <rect x="22" y="660" width="50" height="50" rx="12" fill="#4A5A73"/>
-    <text x="47" y="693" font-family="$F" font-size="18" font-weight="bold" fill="$WHITE" text-anchor="middle">S</text>
+  <!-- Nemo toolbar and places sidebar -->
+  <rect x="270" y="150" width="1348" height="58" fill="#E9E7EF"/>
+  <text x="304" y="187" font-family="$F" font-size="17" fill="$GRAY_DARK">‹</text>
+  <text x="340" y="187" font-family="$F" font-size="17" fill="$GRAY_DARK">›</text>
+  <rect x="390" y="164" width="980" height="32" rx="16" fill="$WHITE"/>
+  <text x="414" y="186" font-family="$F" font-size="13" fill="$GRAY_MID">Home</text>
+  <rect x="270" y="208" width="290" height="700" fill="#ECEAF1"/>
+  <g font-family="$F" font-size="16" fill="$GRAY_DARK">
+    <text x="302" y="258" font-weight="bold">Places</text>
+    <text x="316" y="304">⌂  Home</text>
+    <text x="316" y="350">▣  Desktop</text>
+    <text x="316" y="396">▤  Documents</text>
+    <text x="316" y="442">▧  Downloads</text>
+    <text x="302" y="506" font-weight="bold">Devices</text>
+    <text x="316" y="552">◉  Computer</text>
+    <text x="302" y="616" font-weight="bold">Network</text>
   </g>
-
-  <rect x="220" y="180" width="1080" height="620" rx="10" fill="$WHITE" stroke="#000" stroke-opacity="0.25"/>
-  <rect x="220" y="180" width="1080" height="46" rx="10" fill="$PURPLE"/>
-  <rect x="220" y="212" width="1080" height="14" fill="$PURPLE"/>
-  <text x="248" y="210" font-family="$F" font-size="14" font-weight="bold" fill="$WHITE">DCT Portal</text>
-  <g fill="$WHITE" fill-opacity="0.5">
-    <circle cx="1268" cy="203" r="6"/><circle cx="1246" cy="203" r="6"/><circle cx="1224" cy="203" r="6"/>
-  </g>
-  <rect x="240" y="242" width="1040" height="34" rx="17" fill="#E8E6EF"/>
-  <text x="262" y="264" font-family="$F" font-size="13" fill="$GRAY_MID">https://dct.edu.ph</text>
-
-  <text x="264" y="332" font-family="$F" font-size="26" font-weight="bold" fill="$PURPLE">Student Portal</text>
-  <text x="264" y="360" font-family="$F" font-size="14" fill="$GRAY_MID">Grades, enrolment and announcements</text>
-  <g fill="#ECECEC">
-    <rect x="264" y="392" width="320" height="150" rx="8"/>
-    <rect x="604" y="392" width="320" height="150" rx="8"/>
-    <rect x="944" y="392" width="316" height="150" rx="8"/>
-  </g>
-  <g fill="$GRAY_LIGHT">
-    <rect x="284" y="414" width="120" height="12" rx="6"/>
-    <rect x="284" y="438" width="240" height="9" rx="4"/>
-    <rect x="284" y="456" width="200" height="9" rx="4"/>
-    <rect x="624" y="414" width="120" height="12" rx="6"/>
-    <rect x="624" y="438" width="240" height="9" rx="4"/>
-    <rect x="624" y="456" width="180" height="9" rx="4"/>
-    <rect x="964" y="414" width="120" height="12" rx="6"/>
-    <rect x="964" y="438" width="240" height="9" rx="4"/>
-    <rect x="964" y="456" width="210" height="9" rx="4"/>
-  </g>
-  <g fill="#F4F4F4">
-    <rect x="264" y="562" width="996" height="40" rx="6"/>
-    <rect x="264" y="614" width="996" height="40" rx="6"/>
-    <rect x="264" y="666" width="996" height="40" rx="6"/>
-  </g>
-  <g fill="$GRAY_LIGHT">
-    <rect x="284" y="578" width="300" height="9" rx="4"/>
-    <rect x="284" y="630" width="380" height="9" rx="4"/>
-    <rect x="284" y="682" width="260" height="9" rx="4"/>
+  <g font-family="$F" font-size="14" fill="$GRAY_DARK" text-anchor="middle">
+    <rect x="604" y="244" width="120" height="112" rx="8" fill="#E9E7EF"/>
+    <text x="664" y="294" font-size="34" fill="$PURPLE">▰</text><text x="664" y="334">Documents</text>
+    <rect x="754" y="244" width="120" height="112" rx="8" fill="#E9E7EF"/>
+    <text x="814" y="294" font-size="34" fill="$PURPLE">▣</text><text x="814" y="334">Downloads</text>
+    <rect x="904" y="244" width="120" height="112" rx="8" fill="#E9E7EF"/>
+    <text x="964" y="294" font-size="34" fill="$PURPLE">▧</text><text x="964" y="334">Pictures</text>
+    <rect x="1054" y="244" width="120" height="112" rx="8" fill="#E9E7EF"/>
+    <text x="1114" y="294" font-size="34" fill="$PURPLE">▰</text><text x="1114" y="334">Music</text>
   </g>
 
-  <rect x="700" y="900" width="520" height="56" rx="28" fill="$GRAY_DARK" fill-opacity="0.92"/>
-  <circle cx="732" cy="928" r="12" fill="$PURPLE"/>
-  <text x="756" y="934" font-family="$F" font-size="15" fill="$WHITE">
-    Welcome to $DCT_NAME &#183; $DCT_VENDOR</text>
+  <!-- Cinnamon bottom panel: Menu, launchers, window list, tray and clock -->
+  <rect x="0" y="1018" width="1920" height="62" fill="#24222B" opacity="0.97"/>
+  <rect x="14" y="1025" width="242" height="48" rx="7" fill="$PURPLE"/>
+  <image x="25" y="1033" width="32" height="32" xlink:href="dct-os.svg"/>
+  <text x="67" y="1056" font-family="$F" font-size="16" font-weight="bold" fill="$WHITE">Dominican OS</text>
+  <g font-family="$F" font-size="19" text-anchor="middle">
+    <rect x="272" y="1027" width="46" height="44" rx="7" fill="#3D3949"/><text x="295" y="1056" fill="$WHITE">⌂</text>
+    <rect x="324" y="1027" width="46" height="44" rx="7" fill="#3D3949"/><text x="347" y="1056" fill="$WHITE">▣</text>
+    <rect x="376" y="1027" width="46" height="44" rx="7" fill="#3D3949"/><text x="399" y="1056" fill="$WHITE">W</text>
+  </g>
+  <rect x="448" y="1025" width="266" height="48" rx="6" fill="#3D3949"/>
+  <rect x="448" y="1025" width="4" height="48" rx="2" fill="$PURPLE"/>
+  <text x="472" y="1055" font-family="$F" font-size="15" fill="$WHITE">Files — Home</text>
+  <text x="1654" y="1056" font-family="$F" font-size="15" fill="$WHITE">◉  ◖  ▴</text>
+  <text x="1896" y="1056" font-family="$F" font-size="14" fill="$WHITE" text-anchor="end">$DESKTOP_CLOCK</text>
 </svg>
 EOF
 } > "$WORK/m-desktop.svg"

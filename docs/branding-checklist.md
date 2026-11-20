@@ -54,7 +54,7 @@ nothing can rot on the next Yaru update.
 | Window borders | `/usr/share/themes/Yaru-dark/` | ✅ only Yaru theme with `metacity-1/` |
 | Sound theme | `/usr/share/sounds/Yaru/` | ✅ ships in the base |
 | Fonts | `/usr/share/fonts/` | `Inter` + `JetBrains Mono` (OFL), installed by the build |
-| Layout (taskbar/start menu) | Cinnamon panel | ✍️ Windows-like or macOS-like? |
+| Layout (taskbar/start menu) | Cinnamon bottom panel + Menu | ✅ Windows-familiar layout selected; validate on the live ISO |
 
 `apply-branding.sh` checks every theme name in the override **section-aware**
 (`theme-name` is the GTK theme in the greeter but the sound theme in a
@@ -83,7 +83,7 @@ and broke on every Yaru release.
 
 | Item | Path |
 |---|---|
-| Calamares branding | `/etc/calamares/branding/dct/` |
+| Calamares branding pack | `/usr/share/calamares/branding/dct/`; `/etc/calamares/settings.conf` selects `branding: dct` |
 | Product name/URLs | `branding.desc` — rendered from `payload/branding/tokens.env` |
 | Colours | `stylesheet.qss` + `branding.desc` — rendered from `tokens.env` |
 | Logo / welcome image | `logo.png` + `welcome.png` (1200×800), installed from `payload/assets/` |

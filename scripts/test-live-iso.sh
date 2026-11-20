@@ -176,6 +176,52 @@ if [ "$DO_STRUCT" -eq 1 ]; then
             else
                 f "Yaru-purple-dark theme missing — desktop falls back to Adwaita"
             fi
+            if [ -s "$TMP/base.list" ] \
+               && grep -qF 'usr/bin/cinnamon-session' "$TMP/base.list"; then
+                p "real Cinnamon session is installed"
+            else
+                f "Cinnamon session missing from the image"
+            fi
+
+            cinnamon_defaults="$(unsquashfs -q -cat "$TMP/base.squashfs" \
+                usr/share/glib-2.0/schemas/99_dct-os.gschema.override 2>/dev/null || true)"
+            if has "app-menu-label='Dominican OS'" "$cinnamon_defaults" \
+               && has "app-menu-icon-name='dct-os'" "$cinnamon_defaults"; then
+                p "Cinnamon panel menu uses Dominican OS name and icon"
+            else
+                f "Cinnamon menu defaults are missing Dominican OS branding"
+            fi
+            if [ -s "$TMP/base.list" ] \
+               && grep -qF 'usr/share/icons/hicolor/scalable/apps/dct-os.svg' "$TMP/base.list"; then
+                p "Dominican OS Cinnamon menu icon is installed"
+            else
+                f "Dominican OS menu icon is missing"
+            fi
+
+            # The clean live-build image uses Calamares; the official Ubuntu
+            # Cinnamon remaster uses Canonical's bootstrap snap instead.
+            # When Calamares is present, require both selection and assets.
+            if [ -s "$TMP/base.list" ] \
+               && grep -qF 'etc/calamares/settings.conf' "$TMP/base.list"; then
+                calamares_settings="$(unsquashfs -q -cat "$TMP/base.squashfs" \
+                    etc/calamares/settings.conf 2>/dev/null || true)"
+                calamares_branding="$(unsquashfs -q -cat "$TMP/base.squashfs" \
+                    usr/share/calamares/branding/dct/branding.desc 2>/dev/null || true)"
+                if has_re '^[[:space:]]*branding:[[:space:]]*dct[[:space:]]*$' \
+                         "$calamares_settings" \
+                   && has 'productName:         "Dominican OS"' "$calamares_branding"; then
+                    p "Calamares selects the DCT branding pack"
+                else
+                    f "Calamares settings/branding do not select Dominican OS"
+                fi
+                if [ -s "$TMP/base.list" ] \
+                   && grep -qF 'usr/share/calamares/branding/dct/logo.png' "$TMP/base.list" \
+                   && grep -qF 'usr/share/calamares/branding/dct/welcome.png' "$TMP/base.list"; then
+                    p "Calamares DCT logo and welcome artwork are installed"
+                else
+                    f "Calamares DCT artwork missing from the image"
+                fi
+            fi
             rm -f "$TMP/base.squashfs"
         else
             f "could not extract the base layer"

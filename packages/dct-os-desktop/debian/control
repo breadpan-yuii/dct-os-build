@@ -23,9 +23,10 @@ Depends: dct-os-defaults (>= 1.0),
 Recommends: onlyoffice-desktopeditors,
             winetricks,
             calamares
-# NOTE: the desktop itself (cinnamon, lightdm, slick-greeter) is supplied by
-# the Ubuntu Cinnamon 24.04 base image, so it is deliberately not a dependency
-# here — pulling it in on a plain Ubuntu base would fight gdm3/gnome-shell.
+# NOTE: the desktop itself is selected by the image build: the ISO remaster
+# starts from Ubuntu Cinnamon, while clean live-build explicitly installs
+# ubuntucinnamon-desktop-minimal. Keeping that selection out of this app
+# metapackage avoids silently replacing the display manager on other hosts.
 Suggests: winehq-stable
 Description: Dominican OS desktop environment
  Meta package that turns an Ubuntu Cinnamon 24.04 LTS base into the standard

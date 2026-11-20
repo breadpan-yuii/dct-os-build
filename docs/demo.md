@@ -11,7 +11,7 @@ caught presenting a render as a live system is the only way this demo fails.
 |---|---|---|---|---|
 | **0** | Design renders in `demo/mockups/` | nothing — already generated | done | "Design direction for the branded system." |
 | **1** | A real Ubuntu VM with branding applied | any VM software | ~1 hour | "The branding layer, running." |
-| **2** | A bootable Dominican OS ISO | Tier 1 + `penguins-eggs` | ~half a day | "A Dominican OS image that boots." |
+| **2** | A bootable Dominican OS ISO | root, `xorriso`, `squashfs-tools` | ~40 min | "A Dominican OS image that boots." |
 
 Tier 1 is the sweet spot. Tier 2 is the one that ends the conversation.
 
@@ -28,14 +28,21 @@ ls demo/mockups/
 |---|---|
 | `grub.png` | boot menu |
 | `plymouth.png` | boot splash |
-| `installer.png` | Calamares welcome page |
-| `login.png` | greeter |
-| `desktop.png` | desktop with the institutional portal open |
+| `installer.png` | DCT installer artwork/theme overlay preview (not the installer's screen) |
+| `login.png` | Dominican OS greeter concept (no sample username or login notice) |
+| `desktop.png` | Cinnamon desktop concept with a Nemo Files window and branded bottom-panel menu |
 
 **Label them "design render".** Every slide, every caption. They are SVG drawn
 from `payload/branding/tokens.env`, not photographs of a running machine. If a
 panel member asks "is that the actual system?", the answer is "that's the design
 render — the running version is on the laptop, let me show you."
+
+`installer.png` is deliberately narrower: it previews the exact DCT art files
+overlaid on Canonical's signed installer snap. It does **not** imply the
+installer's whole UI is rebranded. The current overlay changes its logos,
+mascot, theme assets and launcher name/icon; installer text baked into the
+upstream app can still say Ubuntu. A full Dominican OS installer identity needs
+additional work and a real on-screen test before it can be claimed.
 
 Why they exist: they define the target so the real build has something to be
 measured against, and they are what you put on the slide *behind* you while you
@@ -54,8 +61,10 @@ every classroom PC.
 
 ### Prepare the VM
 
-1. Download **Ubuntu 24.04 LTS Desktop** (`ubuntu-24.04.*-desktop-amd64.iso`) —
-   *not* Zorin. See `docs/licensing.md` for why that is not negotiable.
+1. Download the official **Ubuntu Cinnamon 24.04 LTS** (`ubuntucinnamon-24.04.*-desktop-amd64.iso`) —
+   *not* plain Ubuntu GNOME and not Zorin. This ensures the VM is exercising the
+   same Cinnamon desktop as the remastered image. See `docs/licensing.md` for why
+   the Ubuntu base is intentional.
 2. Create a VM: 4 GB RAM, 40 GB disk, UEFI firmware if your hypervisor offers it.
 3. Install with a user named `student`, locale `English (Philippines)`,
    timezone `Asia/Manila`. These match the classroom default.
@@ -133,7 +142,7 @@ Ubuntu Cinnamon 24.04.5 ships the same layered casper filesystem as Ubuntu — n
 single `filesystem.squashfs`. The script handles that layout, which is why the
 steps above look different from older remaster recipes.
 
-Why this and not penguins-eggs: it does not need a running branded machine, it
+Why this and not a snapshot tool such as penguins-eggs: it does not need a running branded machine, it
 does not need Docker, it works from this Arch host, and it leaves the signed
 shim/GRUB/kernel chain untouched — so the image still boots with **Secure Boot
 on**, on a PC that has never been configured.

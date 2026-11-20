@@ -1,6 +1,6 @@
 ---
 # Calamares branding for Dominican OS.
-# Install to /etc/calamares/branding/dct/branding.desc
+# Install to /usr/share/calamares/branding/dct/branding.desc
 # referenced from /etc/calamares/settings.conf via:  branding: dct
 #
 # Deliberately no `slideshow:` key — a broken show.qml makes the installer

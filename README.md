@@ -13,7 +13,7 @@ OS assets.
 |---|---|
 | Product | **Dominican OS 1.0** (codename *Noble*); internal identifiers stay `dct` |
 | Base | Ubuntu Cinnamon 24.04.5 LTS — an official Ubuntu flavour, Canonical's signed boot chain intact |
-| Desktop | Cinnamon, purple + gray, from `Yaru-purple-dark` and one `tokens.env` |
+| Desktop | Cinnamon with a familiar bottom-panel/menu layout; purple + gray from `Yaru-purple-dark` and one `tokens.env` |
 | Office | OnlyOffice (default) · LibreOffice (fallback) · Wine. Microsoft Office only from DCT's licensed media — never bundled |
 | Target hardware | Pentium-class CPU, 4 GB RAM |
 | Artefact | `dist/Dominican-OS-1.0-live-amd64.iso` — 7.53 GB, boots to a live desktop without installing |
@@ -88,10 +88,15 @@ is never bundled; see **`docs/office.md`** for the licensing and version rules.
 boot that waits for a login prompt, plus a UEFI/GRUB boot with screenshots. Do
 not skip it because the build said "ok".
 
-The reproducible path is a step-by-step runbook in **`docs/demo.md`**. Read that
-before promising anyone an ISO.
+The reproducible path is a step-by-step runbook in **`docs/demo.md`**. Its clean
+Ubuntu `live-build` root explicitly installs Ubuntu's
+`ubuntucinnamon-desktop-minimal`; it does not rely on the remaster's preinstalled
+desktop. The build script is non-interactive for repeatable local/CI use.
+Read the runbook before promising anyone an ISO.
 
-`make pkgs` / `make iso` require `podman` (or `docker`) and ~25 GB free disk.
+`make pkgs` / `make iso` require `podman` (or `docker`) with access to run
+privileged build containers and ~25 GB free disk. Merely having the Docker CLI
+installed is not enough; its daemon/socket must be accessible.
 The live ISO path needs `xorriso` and `squashfs-tools` instead.
 
 ## Theme
@@ -133,13 +138,14 @@ docs/            demo runbook, proposal, architecture, licensing, secure boot
 
 | Area | State |
 |---|---|
-| Branding layer (`payload/` + `scripts/`) | Written; `apply-branding.sh` applied to the live image and `verify-branding.sh` passes with **0 failures** |
+| Branding layer (`payload/` + `scripts/`) | Written and applied to published v1.0; latest Cinnamon menu defaults are source-only until the next rebuild |
 | Theme (purple + gray) | Finalized. GTK, icons, Cinnamon shell and greeter all use `Yaru-purple-dark`; every colour comes from `payload/branding/tokens.env` |
-| Login greeter | `dct-greeter.png` + `/etc/lightdm/slick-greeter.conf`; confirmed present in the image, **not yet seen on screen** |
+| Cinnamon desktop | Ubuntu Cinnamon 24.04.5 is the actual desktop. The clean live-build path now selects `ubuntucinnamon-desktop-minimal`; source defaults brand the bottom-panel menu and use the DCT wallpaper/theme. The latest branding defaults are **not yet baked into the published v1.0 ISO** |
+| Login greeter | `dct-greeter.png` + `/etc/lightdm/slick-greeter.conf`; sample username and login banner are removed from the design preview. Actual greeter appearance is **not yet seen on screen** |
 | Boot | Plymouth themed and colour-checked against the tokens. GRUB menu relabelled; the live ISO's GRUB is not themed (installed systems are) |
 | Installer | Canonical's `ubuntu-desktop-bootstrap` snap, launcher renamed **Install Dominican OS**, artwork overlaid at boot. Auto-launch is masked, so the live session is try-only |
 | Live ISO | Built and boot-tested: `dist/Dominican-OS-1.0-live-amd64.iso`, 7.53 GB, published as release **v1.0**. Serial boot **3/3** (real casper medium detection, no `ignore_uuid`), structure **15/15**, and the image's own `/md5sum.txt` verifies **302/302** against the mounted image. Early-boot splash is DCT's (initrd rebuilt, medium UUID re-synced). Sum in the matching `.sha256` file |
-| Reproducible ISO (`.deb` packages, live-build) | Written, **never executed** — needs a container runtime |
+| Reproducible ISO (`.deb` packages, live-build) | Configuration now explicitly installs Ubuntu Cinnamon minimal; **not yet built** because this environment cannot access Docker's daemon |
 | Office stack | OnlyOffice default, LibreOffice fallback, Wine bundled. Microsoft Office installs only from DCT's licensed media, which has not been supplied, so that path is untested |
 
 **Proven:** the image boots to a live desktop — casper finds its medium, assembles
@@ -148,9 +154,24 @@ Branding files are in the right paths, every theme named in the overrides exists
 greeter policy matches the schema, plymouth colours match `tokens.env`, the
 installer overlay unit is enabled, and `casper-md5check` has nothing to report.
 
-**Not yet proven:** how the desktop and greeter actually look, idle RAM on a
-4 GB machine, the installer window on screen, an install from the ISO, and a
-Secure Boot boot on real hardware. These need a person at a VM or a lab PC.
+**Not yet proven:** whether the desktop and greeter match the design on target
+hardware, idle RAM on a 4 GB machine, the installer window on screen, an install
+from the ISO, and Secure Boot on a physical PC. These need a person at a VM or
+lab PC.
+
+**Latest validation note (2026-11-20):** the published v1.0 ISO completed the
+QEMU serial and UEFI desktop boots (21 checks passed). The updated structure
+check reports **17 passed, 1 failed** on that old ISO: it is missing the new
+Dominican OS name/icon defaults for Cinnamon's panel menu. That is expected
+until the source changes are rebuilt; do not claim they are already in v1.0.
+The captured VM desktop also showed a generic “System program problem detected”
+dialog. The failing process was not captured, so this remains an open
+investigation—not a confirmed Cinnamon or OS defect.
+
+The source changes have not yet been validated on the target Pentium/4 GB
+machines. Check desktop responsiveness and idle memory, greeter behavior,
+network/audio, and installer flow on a lab PC before deployment. No installation
+or disk changes have been made during the VM checks.
 
 **Open blockers:** official DCT brand hex, vector artwork and written permission
 to use the seal, and the licensed Office media. `docs/branding-checklist.md`
@@ -158,5 +179,6 @@ lists the remaining decisions phase by phase.
 
 `make demo` regenerates every asset and render from `tokens.env`.
 
-For a demo this week, use **Tier 2** in `docs/demo.md`: the bootable live ISO.
-Do not wait on the container build.
+For a demo, **Tier 2** in `docs/demo.md` is the already-published v1.0 ISO.
+Disclose that it predates the latest Cinnamon panel-branding changes; rebuild
+and retest before presenting it as the current source configuration.

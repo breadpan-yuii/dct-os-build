@@ -25,6 +25,32 @@ built. Their image is 30 `zorin-*` packages over stock Ubuntu 24.04, including
 `zorin-os-desktop`, `zorin-os-defaults`-equivalent, `zorin-gtk-theme` and
 `zorin-os-wallpapers`. Same architecture, different logo.
 
+## Desktop choice: Ubuntu Cinnamon
+
+Dominican OS keeps Cinnamon rather than building a new desktop or copying a
+desktop from a running machine. Ubuntu Cinnamon is an official Ubuntu flavour,
+so the remaster inherits its maintained Cinnamon session, LightDM, and signed
+Ubuntu boot components. Cinnamon's conventional bottom panel and application
+menu give students a familiar taskbar/start-menu workflow; the DCT defaults
+brand that menu and use the college wallpaper, palette, and icons.
+
+The clean `live-build` route must select the desktop explicitly because it does
+not inherit packages from the Ubuntu Cinnamon ISO. It uses Ubuntu's
+`ubuntucinnamon-desktop-minimal` metapackage, with Dominican OS apps and defaults
+layered on top. This follows the Live Manual's package-list/metapackage model
+rather than the video's Debian-specific XFCE package list.
+
+Cinnamon is a **desktop/layout choice**, not a security feature or a claim that
+it is the lightest desktop. Security comes from supported Ubuntu updates,
+account policy, and the signed boot chain. The target machines are Pentium-class
+with 4 GB RAM; DCT defaults disable animations, but idle memory, responsiveness,
+and installer behavior still need testing on that hardware before rollout.
+
+References: [Gary Newell's Debian live-build tutorial](https://youtu.be/-345ftEd6ow),
+the [Debian Live Manual: package selection](https://live-team.pages.debian.net/live-manual/html/live-manual/customizing-package-installation.en.html)
+and [custom contents/hooks](https://live-team.pages.debian.net/live-manual/html/live-manual/customizing-contents.en.html),
+and Ubuntu's [`ubuntucinnamon-desktop-minimal` package](https://packages.ubuntu.com/noble/ubuntucinnamon-desktop-minimal).
+
 ## Why `payload/` is separate from the ISO builder
 
 The single most expensive mistake in a project like this is treating the ISO as

@@ -486,6 +486,25 @@ branding_artwork() {
     else
         warn "no payload/assets/dct-logo.png — greeter logo will be blank"
     fi
+
+    # Cinnamon's panel menu applet uses this themed icon by name. Install it
+    # with the general branding artwork, not only in the installer branch.
+    if [ -f "$PAYLOAD/installer/dct-os.svg" ]; then
+        install_file "$PAYLOAD/installer/dct-os.svg" \
+                     /usr/share/icons/hicolor/scalable/apps/dct-os.svg
+        if [ "$DRY" -eq 1 ]; then
+            printf '     + gtk-update-icon-cache -f -t %s\n' \
+                "$T/usr/share/icons/hicolor"
+        elif command -v gtk-update-icon-cache >/dev/null 2>&1 \
+             && [ -d "$T/usr/share/icons/hicolor" ]; then
+            gtk-update-icon-cache -f -t "$T/usr/share/icons/hicolor" \
+                >/dev/null 2>&1 \
+                && ok "hicolor cache updated (Cinnamon menu icon dct-os)" \
+                || warn "could not update the hicolor icon cache"
+        fi
+    else
+        warn "no payload/installer/dct-os.svg — Cinnamon menu uses its upstream icon"
+    fi
 }
 
 # ---------------------------------------------------------------------------
@@ -497,24 +516,32 @@ branding_calamares() {
         return 0
     fi
     say "calamares"
-    run install -d -m 0755 "$T/etc/calamares/branding/dct"
+    # Calamares searches branding packs under /usr/share/calamares/branding;
+    # /etc/calamares is for settings.conf and module configuration.
+    run install -d -m 0755 "$T/usr/share/calamares/branding/dct"
     render_file "$PAYLOAD/calamares/branding/dct/branding.desc" \
-                /etc/calamares/branding/dct/branding.desc
+                /usr/share/calamares/branding/dct/branding.desc
     render_file "$PAYLOAD/calamares/branding/dct/stylesheet.qss" \
-                /etc/calamares/branding/dct/stylesheet.qss
+                /usr/share/calamares/branding/dct/stylesheet.qss
     if [ -f "$PAYLOAD/assets/dct-logo.png" ]; then
         install_file "$PAYLOAD/assets/dct-logo.png" \
-                     /etc/calamares/branding/dct/logo.png
+                     /usr/share/calamares/branding/dct/logo.png
     else
         warn "no payload/assets/dct-logo.png — installer logo will be blank"
     fi
     if [ -f "$PAYLOAD/assets/welcome.png" ]; then
         install_file "$PAYLOAD/assets/welcome.png" \
-                     /etc/calamares/branding/dct/welcome.png
+                     /usr/share/calamares/branding/dct/welcome.png
     else
         warn "no payload/assets/welcome.png — installer welcome image will be blank"
     fi
-    ok "installer branding installed (settings.conf sets branding: dct)"
+    if [ -r "$T/etc/calamares/settings.conf" ] \
+       && grep -qE '^[[:space:]]*branding:[[:space:]]*dct[[:space:]]*$' \
+                  "$T/etc/calamares/settings.conf"; then
+        ok "DCT branding pack installed and selected by settings.conf"
+    else
+        warn "DCT branding pack installed, but /etc/calamares/settings.conf does not select 'branding: dct'"
+    fi
 }
 
 # ---------------------------------------------------------------------------
@@ -541,9 +568,6 @@ branding_installer() {
                  /usr/share/dct-os/dct-installer-brand 0755
     install_file "$PAYLOAD/installer/dct-installer-brand.service" \
                  /etc/systemd/system/dct-installer-brand.service
-    install_file "$PAYLOAD/installer/dct-os.svg" \
-                 /usr/share/icons/hicolor/scalable/apps/dct-os.svg
-
     # The artwork rides along with the payload copy in the update shield, but
     # stage it explicitly so this step also works with --no-shield.
     local n=0

@@ -42,8 +42,7 @@ primary-color='#232323'
 
 [org.gnome.login-screen]
 logo='/usr/share/pixmaps/dct-logo.png'
-banner-message-enable=true
-banner-message-text='Dominican College of Tarlac — Authorized users only. Activity is logged.'
+banner-message-enable=false
 
 [org.gnome.desktop.session]
 idle-delay=uint32 600
@@ -109,6 +108,16 @@ remember-recent-files=false
 
 [org.cinnamon]
 favorite-apps=['firefox_firefox.desktop', 'onlyoffice-desktopeditors.desktop', 'nemo.desktop', 'org.gnome.gedit.desktop', 'org.gnome.Software.desktop']
+# Cinnamon 6.0.4's application-menu applet reads these global settings when
+# menu-custom is false. Use the installed DCT icon and product name instead of
+# Cinnamon's upstream symbol/blank label, so the real bottom-panel menu carries
+# Dominican OS branding.
+app-menu-icon-name='dct-os'
+app-menu-label='Dominican OS'
+# Keep Cinnamon's normal, visible bottom panel and its upstream applet layout.
+panels-enabled=['1:0:bottom']
+panels-autohide=['1:false']
+panels-height=['1:40']
 desktop-effects=false
 desktop-effects-on-dialogs=false
 desktop-effects-on-menus=false

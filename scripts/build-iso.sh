@@ -25,7 +25,9 @@ ls dist/*.deb >/dev/null 2>&1 || {
 }
 
 echo "==> building ISO (this takes 25-60 min)"
-"$CTR" run --rm -it \
+# No TTY is needed: keeping this non-interactive also makes the build usable
+# from CI and scripted release jobs.
+"$CTR" run --rm \
     --privileged \
     -v "$REPO":/src:z \
     -w /src/live-build \
