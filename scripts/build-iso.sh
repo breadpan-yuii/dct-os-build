@@ -37,6 +37,9 @@ echo "==> building ISO (this takes 25-60 min)"
         apt-get install -y -qq --no-install-recommends \
             live-build debootstrap squashfs-tools xorriso \
             mtools dosfstools grub-pc-bin grub-efi-amd64-bin >/dev/null
+        # Remove cached chroot/install stamps so package-list changes (notably
+        # the kernel and local DCT packages) are applied on every clean build.
+        lb clean --purge
         ./auto/config
         # Copy debs AFTER lb config, because config/ is regenerated.
         install -d config/includes.chroot/var/tmp/dct-debs
