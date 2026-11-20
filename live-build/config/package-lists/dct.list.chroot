@@ -3,8 +3,8 @@
 # so explicitly install the official minimal Ubuntu Cinnamon desktop task.
 
 ubuntucinnamon-desktop-minimal
-dct-os-desktop
-dct-os-defaults
+# DCT packages are local .debs; scripts/build-iso.sh stages them and the
+# 0100-dct-install-debs hook installs them after apt has installed this list.
 
 # installer
 calamares
