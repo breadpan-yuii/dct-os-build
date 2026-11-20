@@ -6,7 +6,28 @@ live-build/binary/
 live-build/chroot/
 live-build/cache/
 live-build/.build/
+live-build/config/binary
+live-build/config/bootstrap
+live-build/config/chroot
+live-build/config/common
+live-build/config/source
 packages/*/stage/
+
+# dpkg-buildpackage output
+packages/*/debian/.debhelper/
+packages/*/debian/*.substvars
+packages/*/debian/files
+packages/*/debian/debhelper-build-stamp
+packages/*/debian/dct-os-desktop/
+packages/*/debian/dct-os-defaults/
+packages/*/*.build
+packages/*/*.buildinfo
+packages/*/*.changes
+packages/*/*.deb
+packages/*.build
+packages/*.buildinfo
+packages/*.changes
+packages/*.deb
 
 # secret / local
 *.local
